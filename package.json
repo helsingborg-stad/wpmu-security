@@ -1,7 +1,7 @@
 {
     "name": "@helsingborg-stad/wpmu-security",
     "description": "A WordPress MU Plugin for security enhancements",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "main": "",
     "repository": {
         "type": "git",
@@ -27,8 +27,7 @@
         "> 1%",
         "not dead"
     ],
-    "devDependencies": {
-    },
+    "devDependencies": [],
     "browser": {
         "child_process": false
     }
