@@ -29,5 +29,5 @@
         "phpunit/phpunit": "^9.5",
         "php-stubs/wordpress-stubs": "^6.8"
     },
-    "version": "0.3.0"
+    "version": "0.4.1"
 }
