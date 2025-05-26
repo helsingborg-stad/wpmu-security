@@ -75,7 +75,7 @@ class SubResourceIntegrity
 
         $hash = $this->generateIntegrityHash($src);
         if ($hash) {
-            $this->wpService->wpCacheSet($cacheKey, $hash, $cacheGroup, DAY_IN_SECONDS);
+            $this->wpService->wpCacheSet($cacheKey, $hash, $cacheGroup, WEEK_IN_SECONDS);
         }
 
         return $hash;
