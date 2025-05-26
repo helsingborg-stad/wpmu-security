@@ -24,11 +24,17 @@ class WPMUSecurity
 {
   public function __construct()
   {
+    //Autoload
     $this->autoload();
+    
+    //Services
     $wpService = new NativeWpService();
     $config = new \WPMUSecurity\Config($wpService);
 
+    //Translations
     $this->loadTranslations($wpService);
+
+    //Features
     $this->setupGenericLoginErrors($wpService);
     $this->setupGenericPasswordReset($wpService);
     $this->setupHsts($wpService, $config);
