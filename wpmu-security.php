@@ -1,10 +1,15 @@
 <?php
 
 /*
-Plugin Name:    WPMU Security
-Description:    Adds basic security features to WordPress.
-Version:        1.0.0
-Author:         Sebastian Thulin
+ * Plugin Name:    WPMU Security
+ * Description:    Adds basic security features to WordPress.
+ * Version:        1.0.0
+ * Author:         Sebastian Thulin
+ * Author URI:     https://github.com/helsingborg-stad
+ * License:        MIT
+ * License URI:    https://opensource.org/licenses/MIT
+ * Text Domain:    wpmu-security
+ * Domain Path:    /languages
 */
 
 namespace WPMUSecurity;
@@ -20,9 +25,8 @@ class WPMUSecurity
   public function __construct()
   {
     $this->autoload();
-
     $wpService = new NativeWpService();
-
+    $this->loadTranslations($wpService);
     $this->setupGenericLoginErrors($wpService);
     $this->setupGenericPasswordReset($wpService);
   }
@@ -65,6 +69,17 @@ class WPMUSecurity
     } else {
       throw new \Exception('Autoload file not found. Please run `composer install` to generate it.');
     }
+  }
+
+  private function loadTranslations($wpService)
+  {
+    $wpService->addAction('init', function () use ($wpService) {
+      $wpService->loadPluginTextdomain(
+        'wpmu-security', 
+        false, 
+        $wpService->pluginBasename(dirname(__FILE__)) . '/languages'
+      );
+    });
   }
 }
 

@@ -1,0 +1,43 @@
+# Copyright (C) 2025 Sebastian Thulin
+# This file is distributed under the MIT.
+msgid ""
+msgstr ""
+"Project-Id-Version: WPMU Security 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wpmu-security\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-05-26T12:56:44+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.10.0\n"
+"X-Domain: wpmu-security\n"
+
+#. Plugin Name of the plugin
+#: wpmu-security.php
+msgid "WPMU Security"
+msgstr ""
+
+#. Description of the plugin
+#: wpmu-security.php
+msgid "Adds basic security features to WordPress."
+msgstr ""
+
+#. Author of the plugin
+#: wpmu-security.php
+msgid "Sebastian Thulin"
+msgstr ""
+
+#. Author URI of the plugin
+#: wpmu-security.php
+msgid "https://github.com/helsingborg-stad"
+msgstr ""
+
+#: source/php/LoginErrors.php:29
+msgid "Invalid login credentials. Please try again."
+msgstr ""
+
+#: source/php/PasswordReset.php:34
+msgid "If the information provided is correct, you will receive a reset email shortly."
+msgstr ""
