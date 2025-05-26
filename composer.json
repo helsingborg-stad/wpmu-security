@@ -28,5 +28,6 @@
         "codedungeon/phpunit-result-printer": "^0.31.0",
         "phpunit/phpunit": "^9.5",
         "php-stubs/wordpress-stubs": "^6.8"
-    }
+    },
+    "version": "0.1.0"
 }
