@@ -33,6 +33,20 @@ class WPMUSecurity
     $this->setupGenericPasswordReset($wpService);
     $this->setupHsts($wpService, $config);
     $this->setupCors($wpService, $config);
+    $this->setupSubResourceIntegrity($wpService, $config);
+  }
+
+  /**
+   * Feature: Subresource Integrity (SRI)
+   * This feature adds SRI attributes to script and link tags, ensuring that the resources loaded
+   * have not been tampered with. It checks if the SRI attributes are already set to avoid duplicates.
+   *
+   * @return void
+   */
+  public function setupSubResourceIntegrity($wpService, $config)
+  {
+    $sri = new \WPMUSecurity\Enqueue\SubResourceIntegrity($wpService, $config);
+    $sri->addHooks();
   }
 
   /**
@@ -47,7 +61,7 @@ class WPMUSecurity
     $cors = new \WPMUSecurity\Headers\Cors($wpService);
     $cors->addHooks();
   }
-  
+
   /**
    * Feature: HSTS (HTTP Strict Transport Security)
    * This feature adds the HSTS header to the response, enforcing HTTPS connections for the specified max age.
