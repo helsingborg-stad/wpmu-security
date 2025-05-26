@@ -1,6 +1,6 @@
 <?php
 
-namespace WPMUSecurity;
+namespace WPMUSecurity\Authentication;
 
 use WpService\WpService;
 use WP_Error;

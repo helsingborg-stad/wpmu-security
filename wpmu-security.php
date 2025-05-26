@@ -26,9 +26,39 @@ class WPMUSecurity
   {
     $this->autoload();
     $wpService = new NativeWpService();
+    $config = new \WPMUSecurity\Config($wpService);
+
     $this->loadTranslations($wpService);
     $this->setupGenericLoginErrors($wpService);
     $this->setupGenericPasswordReset($wpService);
+    $this->setupHsts($wpService, $config);
+    $this->setupCors($wpService, $config);
+  }
+
+  /**
+   * Feature: CORS
+   * This feature adds CORS headers to the response, allowing cross-origin requests from the current domain.
+   * It checks if the headers are already set to avoid duplicates.
+   *
+   * @return void
+   */
+  public function setupCors($wpService, $config)
+  {
+    $cors = new \WPMUSecurity\Headers\Cors($wpService);
+    $cors->addHooks();
+  }
+  
+  /**
+   * Feature: HSTS (HTTP Strict Transport Security)
+   * This feature adds the HSTS header to the response, enforcing HTTPS connections for the specified max age.
+   * It checks if the current domain configuration is SSL before adding the header.
+   *
+   * @return void
+   */
+  public function setupHsts($wpService, $config)
+  {
+    $hsts = new \WPMUSecurity\Headers\Hsts($wpService, $config);
+    $hsts->addHooks();
   }
 
   /**
@@ -40,7 +70,7 @@ class WPMUSecurity
    */
   private function setupGenericLoginErrors($wpService)
   {
-    $loginErrors = new \WPMUSecurity\LoginErrors($wpService);
+    $loginErrors = new \WPMUSecurity\Authentication\LoginErrors($wpService);
     $loginErrors->addHooks();
   }
 
@@ -53,7 +83,7 @@ class WPMUSecurity
    */
   private function setupGenericPasswordReset($wpService)
   {
-    $passwordReset = new \WPMUSecurity\PasswordReset($wpService);
+    $passwordReset = new \WPMUSecurity\Authentication\PasswordReset($wpService);
     $passwordReset->addHooks();
   }
 
