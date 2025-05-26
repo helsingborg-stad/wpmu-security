@@ -1,0 +1,35 @@
+{
+    "name": "@helsingborg-stad/wpmu-security",
+    "description": "A WordPress MU Plugin for security enhancements",
+    "version": "1.0.0",
+    "main": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/helsingborg-stad/wpmu-security"
+    },
+    "author": "Niclas Norin",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/helsingborg-stad/wpmu-security/issues"
+    },
+    "homepage": "https://github.com/helsingborg-stad/wpmu-security",
+    "scripts": {
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "watch": "cross-env NODE_ENV=development webpack --watch",
+        "build:dev": "cross-env NODE_ENV=development webpack",
+        "build": "cross-env NODE_ENV=production webpack"
+    },
+    "files": [
+        "dist/"
+    ],
+    "browserslist": [
+        "> 1%",
+        "not dead"
+    ],
+    "devDependencies": {
+    },
+    "browser": {
+        "child_process": false
+    }
+}
