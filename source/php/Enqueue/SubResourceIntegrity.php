@@ -30,7 +30,7 @@ class SubResourceIntegrity
      */
     public function addSriToScript(string $tag, string $handle, string $src): string
     {
-        $integrity = $this->generateIntegrityHash($src);
+        $integrity = $this->maybeGetCachedIntegrityHash($src);
         if ($integrity) {
             $tag = str_replace(' src=', ' integrity="' . esc_attr($integrity) . '" crossorigin="anonymous" src=', $tag);
         }
@@ -48,12 +48,48 @@ class SubResourceIntegrity
      */
     public function addSriToStyle(string $tag, string $handle, string $href, ?string $media = null): string
     {
-        $integrity = $this->generateIntegrityHash($href);
+        $integrity = $this->maybeGetCachedIntegrityHash($href);
 
         if ($integrity) {
-            $tag = str_replace(' href=', ' integrity="' . esc_attr($integrity) . '" crossorigin="anonymous" href=', $tag);
+          $tag = str_replace(' href=', ' integrity="' . esc_attr($integrity) . '" crossorigin="anonymous" href=', $tag);
         }
         return $tag;
+    }
+
+    /**
+     * Attempts to get a cached Subresource Integrity (SRI) hash for a given source URL.
+     * If the hash is not cached, it generates a new one and caches it.
+     *
+     * @param string $src The source URL of the script or style.
+     * @return string|null The cached SRI hash if available, null otherwise.
+     */
+    protected function maybeGetCachedIntegrityHash(string $src): ?string
+    {
+        $cacheKey   = 'sri_' . $this->createSourceIdentifier($src);
+        $cacheGroup = 'wpmu_security_sri';
+
+        $cached = $this->wpService->wpCacheGet($cacheKey, $cacheGroup);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $hash = $this->generateIntegrityHash($src);
+        if ($hash) {
+            $this->wpService->wpCacheSet($cacheKey, $hash, $cacheGroup, DAY_IN_SECONDS);
+        }
+
+        return $hash;
+    }
+
+    /**
+     * Creates a unique identifier for the source URL.
+     *
+     * @param string $src The source URL of the script or style.
+     * @return string A unique identifier for the source.
+     */
+    protected function createSourceIdentifier(string $src): string
+    {
+        return md5($src);
     }
 
     /**
@@ -66,19 +102,17 @@ class SubResourceIntegrity
     {
         $site_url = $this->getCurrentDomain();
 
-        if (strpos($src, $site_url) !== 0) {
-            return null;
+        if (!$this->isLocalAsset($src)) {
+          return null;
         }
 
-        $relative_path = str_replace($site_url, '', $src);
-        $file_path = ABSPATH . "../" . ltrim($relative_path, '/'); // TODO: Fix this path to be more robust
+        $localPath = $this->createRelativePath($src);
 
-        if (!file_exists($file_path)) {
-            return null;
+        if (!file_exists($localPath)) {
+          return null;
         }
 
-        // Get raw file contents and hash
-        $hash = base64_encode(hash_file('sha384', $file_path, true));
+        $hash = base64_encode(hash_file('sha384', $localPath, true));
 
         return "sha384-{$hash}";
     }
@@ -88,8 +122,47 @@ class SubResourceIntegrity
      *
      * @return string The current domain URL.
      */
-    public function getCurrentDomain(): string
+    private function getCurrentDomain(): string
     {
         return $this->wpService->getHomeUrl();
+    }
+
+    /**
+     * Checks if the source matches the current domain.
+     *
+     * @return bool True if the source is a local asset, false otherwise.
+     */
+    private function isLocalAsset(string $src): bool
+    {
+        return strpos(
+          $this->normalizeProtocol($src), 
+          $this->normalizeProtocol($this->getCurrentDomain())
+        ) === 0;
+    }
+
+    /**
+     * Creates a relative path from the source URL. By getting the current wp-content directory
+     * and removing the base URL, we can create a relative path that can be used to generate the SRI hash.
+     *
+     * @param string $src The source URL of the script or style.
+     * @return string The relative path.
+     */
+    private function createRelativePath(string $src): string
+    {
+        $src        = $this->normalizeProtocol($src);
+        $contentUrl = $this->normalizeProtocol(constant('WP_CONTENT_URL'));
+
+        return str_replace($contentUrl, constant('WP_CONTENT_DIR'), $src);
+    }
+
+    /**
+     * Normalizes the protocol in the URL by removing 'http://' and 'https://'.
+     *
+     * @param string $url The URL to normalize.
+     * @return string The normalized URL.
+     */
+    private function normalizeProtocol(string $url): string
+    {
+        return str_replace(['http://', 'https://'], '', $url);
     }
 }
