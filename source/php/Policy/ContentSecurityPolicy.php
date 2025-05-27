@@ -5,6 +5,14 @@ namespace WPMUSecurity\Policy;
 use WP;
 use WpService\WpService;
 
+/**
+ * Class ContentSecurityPolicy
+ *
+ * This class is responsible for generating and sending Content Security Policy (CSP) headers
+ * based on the domains found in the HTML markup, localized scripts, and WordPress content directories.
+ * 
+ * It is only compatible with Themes implementing a filter that allows reading the output markup.
+ */
 class ContentSecurityPolicy
 {
     const LINK_REGEX = '/https?:\\\\?\/\\\\?\/([a-z0-9.-]+)/i';
@@ -18,11 +26,7 @@ class ContentSecurityPolicy
      */
     public function addHooks(): void
     {
-        //If current theme is municipio, do not run
-        //if ($this->wpService->getCurrentTheme() === 'municipio') {
-          //return;
-        //}
-        $this->wpService->addFilter('Municipio/blade/output', [$this, 'read'], 10, 1);
+        $this->wpService->addFilter('Municipio/blade/output', [$this, 'read'], 10, 1); //TODO: Change filter name to a more generic one.
     }
 
     /**
@@ -42,8 +46,6 @@ class ContentSecurityPolicy
 
         $domains = array_unique($domains);
         $domains = array_filter($domains);
-
-        //var_dump($domains);
 
         if (!empty($domains)) {
           $this->sendCspHeaders(
@@ -82,6 +84,16 @@ class ContentSecurityPolicy
         $csp = "default-src 'self';";
         if (!empty($domains)) {
             $csp .= " script-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
+            $csp .= " style-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
+            $csp .= " img-src 'self' data: " . implode(' ', $domains) . ";";
+            $csp .= " connect-src 'self' " . implode(' ', $domains) . ";";
+            $csp .= " font-src 'self' " . implode(' ', $domains) . ";";
+            $csp .= " object-src 'none';";
+            $csp .= " frame-ancestors 'none';";
+            $csp .= " base-uri 'self';";
+            $csp .= " form-action 'self';";
+            $csp .= " upgrade-insecure-requests;";
+            $csp .= " block-all-mixed-content;";
         }
         return $csp;
     }
