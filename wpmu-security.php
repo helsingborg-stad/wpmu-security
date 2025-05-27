@@ -3,7 +3,7 @@
 /*
  * Plugin Name:    WPMU Security
  * Description:    Adds basic security features to WordPress.
- * Version: 0.6.3
+ * Version: 0.6.4
  * Author:         Sebastian Thulin
  * Author URI:     https://github.com/helsingborg-stad
  * License:        MIT
