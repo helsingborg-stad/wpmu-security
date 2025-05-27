@@ -41,6 +41,20 @@ class WPMUSecurity
     $this->setupCors($wpService, $config);
     $this->setupSubResourceIntegrity($wpService, $config);
     $this->setupXmlRpc($wpService);
+    $this->setupCommentSanitization($wpService);
+  }
+
+  /**
+   * Feature: Comment Sanitization
+   * This feature sanitizes comment content to prevent XSS attacks and other malicious input.
+   * It checks if the comment sanitization is already set up to avoid duplicates.
+   *
+   * @return void
+   */
+  public function setupCommentSanitization($wpService)
+  {
+    $comment = new \WPMUSecurity\Input\CommentSanitization($wpService);
+    $comment->addHooks();
   }
 
   /**
