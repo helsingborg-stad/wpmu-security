@@ -26,7 +26,7 @@ class ContentSecurityPolicy
      */
     public function addHooks(): void
     {
-        $this->wpService->addFilter('Municipio/blade/output', [$this, 'read'], 10, 1); //TODO: Change filter name to a more generic one.
+        $this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1); //TODO: Change filter name to a more generic one.
     }
 
     /**
