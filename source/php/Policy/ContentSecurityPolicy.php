@@ -23,8 +23,6 @@ class ContentSecurityPolicy
           //return;
         //}
         $this->wpService->addFilter('Municipio/blade/output', [$this, 'read'], 10, 1);
-
-        add_action('shutdown', [$this, 'getDomainsFromLocalizedScripts']);
     }
 
     /**
@@ -44,6 +42,8 @@ class ContentSecurityPolicy
 
         $domains = array_unique($domains);
         $domains = array_filter($domains);
+
+        //var_dump($domains);
 
         if (!empty($domains)) {
           $this->sendCspHeaders(
