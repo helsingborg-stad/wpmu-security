@@ -3,7 +3,7 @@
 /*
  * Plugin Name:    WPMU Security
  * Description:    Adds basic security features to WordPress.
- * Version: 0.5.1
+ * Version: 0.5.8
  * Author:         Sebastian Thulin
  * Author URI:     https://github.com/helsingborg-stad
  * License:        MIT
@@ -42,6 +42,7 @@ class WPMUSecurity
     $this->setupSubResourceIntegrity($wpService, $config);
     $this->setupXmlRpc($wpService);
     $this->setupCommentSanitization($wpService);
+    $this->setupContentSecurityPolicy($wpService);
   }
 
   /**
@@ -55,6 +56,20 @@ class WPMUSecurity
   {
     $comment = new \WPMUSecurity\Input\CommentSanitization($wpService);
     $comment->addHooks();
+  }
+
+  /**
+   * Feature: Content Security Policy (CSP)
+   * This feature adds a Content Security Policy header to the response, which helps prevent XSS attacks
+   * by controlling which resources can be loaded on the page. It checks if the CSP header is already set
+   * to avoid duplicates.
+   *
+   * @return void
+   */
+  public function setupContentSecurityPolicy($wpService, $config)
+  {
+    $csp = new \WPMUSecurity\Policy\ContentSecurityPolicy($wpService, $config);
+    $csp->addHooks();
   }
 
   /**
