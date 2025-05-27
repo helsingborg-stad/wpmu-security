@@ -108,7 +108,7 @@ class SubResourceIntegrity
 
         $localPath = $this->createRelativePath($src);
 
-        if (!file_exists($localPath)) {
+        if (is_null($localPath) || !file_exists($localPath)) {
           return null;
         }
 
@@ -145,14 +145,36 @@ class SubResourceIntegrity
      * and removing the base URL, we can create a relative path that can be used to generate the SRI hash.
      *
      * @param string $src The source URL of the script or style.
-     * @return string The relative path.
+     * @return string The relative path or null if the source is unresolvable.
      */
-    private function createRelativePath(string $src): string
+    private function createRelativePath(string $src): ?string
     {
-        $src        = $this->normalizeProtocol($src);
-        $contentUrl = $this->normalizeProtocol(constant('WP_CONTENT_URL'));
+        $sanitizedSrc        = $this->normalizeProtocol($src);
+        $sanitizedSrc        = strtok($sanitizedSrc, '?');
 
-        return str_replace($contentUrl, constant('WP_CONTENT_DIR'), $src);
+        // content urls
+        if(stripos($src, 'wp-content') !== false) {
+            $contentUrl   = $this->normalizeProtocol(constant('WP_CONTENT_URL'));
+            $sanitizedSrc =  str_replace($contentUrl, constant('WP_CONTENT_DIR'), $sanitizedSrc);
+            return $sanitizedSrc;
+        }
+
+        // includes urls
+        if(stripos($src, 'wp-includes') !== false) {
+            $includesUrl  = $this->normalizeProtocol(
+              rtrim($this->wpService->includesUrl(), '/')
+            );
+
+            $sanitizedSrc = str_replace(
+              $includesUrl, 
+              constant('ABSPATH') . constant('WPINC'), 
+              $sanitizedSrc
+            );
+
+            return $sanitizedSrc;
+        }
+
+        return null; 
     }
 
     /**
