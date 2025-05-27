@@ -40,6 +40,20 @@ class WPMUSecurity
     $this->setupHsts($wpService, $config);
     $this->setupCors($wpService, $config);
     $this->setupSubResourceIntegrity($wpService, $config);
+    $this->setupXmlRpc($wpService);
+  }
+
+  /**
+   * Feature: XML-RPC
+   * This feature disables XML-RPC functionality to prevent potential attacks.
+   * It checks if the XML-RPC functionality is already disabled to avoid duplicates.
+   *
+   * @return void
+   */
+  public function setupXmlRpc($wpService)
+  {
+    $xmlRpc = new \WPMUSecurity\XmlRpc($wpService);
+    $xmlRpc->addHooks();
   }
 
   /**
