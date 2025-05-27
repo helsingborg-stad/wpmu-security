@@ -41,6 +41,21 @@ class WPMUSecurity
     $this->setupCors($wpService, $config);
     $this->setupSubResourceIntegrity($wpService, $config);
     $this->setupXmlRpc($wpService);
+    $this->setupContentSecurityPolicy($wpService, $config);
+  }
+
+  /**
+   * Feature: Content Security Policy (CSP)
+   * This feature adds a Content Security Policy header to the response, which helps prevent XSS attacks
+   * by controlling which resources can be loaded on the page. It checks if the CSP header is already set
+   * to avoid duplicates.
+   *
+   * @return void
+   */
+  public function setupContentSecurityPolicy($wpService, $config)
+  {
+    $csp = new \WPMUSecurity\Policy\ContentSecurityPolicy($wpService, $config);
+    $csp->addHooks();
   }
 
   /**
