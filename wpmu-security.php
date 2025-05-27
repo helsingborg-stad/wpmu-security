@@ -42,7 +42,7 @@ class WPMUSecurity
     $this->setupSubResourceIntegrity($wpService, $config);
     $this->setupXmlRpc($wpService);
     $this->setupCommentSanitization($wpService);
-    $this->setupContentSecurityPolicy($wpService);
+    $this->setupContentSecurityPolicy($wpService, $config);
   }
 
   /**
