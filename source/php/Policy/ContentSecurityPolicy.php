@@ -39,7 +39,6 @@ class ContentSecurityPolicy
     {
         $categorized = $this->getDomainsFromMarkup($markup);
 
-        // Merge uncategorized domains into appropriate categories
         $extra = array_merge(
             $this->getDomainsFromLocalizedScripts(),
             $this->getContentDomains()
@@ -125,6 +124,11 @@ class ContentSecurityPolicy
             'font-src' => [],
         ];
 
+        $dataAttributesToCspCategory = [
+            'connect-src' => ['data-src'],
+            'frame-src' => ['data-src'],
+        ];
+
         // Match element attributes (src, href, etc.)
         preg_match_all(self::LINK_REGEX, $markup, $matches, PREG_SET_ORDER);
         foreach ($matches as $match) {
@@ -165,7 +169,25 @@ class ContentSecurityPolicy
             }
         }
 
-        // Ensure uniqueness
+        foreach ($dataAttributesToCspCategory as $category => $attributes) {
+            foreach ($attributes as $attr) {
+                $pattern = '/'.preg_quote($attr, '/').'=["\']\[(.*?)\]["\']/i';
+                if (preg_match_all($pattern, $markup, $attrMatches)) {
+                    foreach ($attrMatches[1] as $jsonString) {
+                        $decoded = html_entity_decode($jsonString, ENT_QUOTES);
+                        $urls = json_decode($decoded, true);
+                        if (is_array($urls)) {
+                            foreach ($urls as $url) {
+                                if (preg_match('/https?:\/\/([a-z0-9.-]+)/i', $url, $urlMatch)) {
+                                    $categories[$category][] = strtolower($urlMatch[1]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         foreach ($categories as $key => $domains) {
             $categories[$key] = array_unique($domains);
         }
@@ -223,12 +245,11 @@ class ContentSecurityPolicy
     public function getContentDomains() : array
     {
         $domains = $this->wpService->wpUploadDir();
-
         $domains = array_reduce(
             $domains,
             function ($carry, $item) {
-                if (isset($item['baseurl'])) {
-                    $carry[] = parse_url($item['baseurl'])['host'] ?? null;
+                if(preg_match('/^https?:\/\//i', $item)) {
+                    $carry[] = parse_url($item)['host'] ?? null;
                 }
                 return $carry;
             },
