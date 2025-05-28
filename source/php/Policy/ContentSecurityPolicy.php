@@ -15,7 +15,7 @@ use WpService\WpService;
  */
 class ContentSecurityPolicy
 {
-    const LINK_REGEX = '/https?:\\\\?\/\\\\?\/([a-z0-9.-]+)/i';
+    const LINK_REGEX = '/<(script|img|link|iframe|source|form|video|audio|object|embed|frame)[^>]+(?:src|href|data|action)=["\']https?:\/\/([a-z0-9.-]+)/i';
 
     public function __construct(private WpService $wpService){}
 
@@ -26,7 +26,7 @@ class ContentSecurityPolicy
      */
     public function addHooks(): void
     {
-        $this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1); //TODO: Change filter name to a more generic one.
+        $this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1); 
     }
 
     /**
@@ -37,21 +37,24 @@ class ContentSecurityPolicy
      */
     public function read($markup): string
     {
-        $domains = $this->getDomainsFromMarkup($markup);
-        $domains = array_merge(
-            $domains,
+        $categorized = $this->getDomainsFromMarkup($markup);
+
+        // Merge uncategorized domains into appropriate categories
+        $extra = array_merge(
             $this->getDomainsFromLocalizedScripts(),
             $this->getContentDomains()
         );
 
-        $domains = array_unique($domains);
-        $domains = array_filter($domains);
-
-        if (!empty($domains)) {
-          $this->sendCspHeaders(
-            $this->createCspHeader($domains)
-          );
+        foreach ($categorized as &$domains) {
+            $domains = array_unique(array_merge($domains, $extra));
         }
+
+        if (!empty(array_filter($categorized))) {
+            $this->sendCspHeaders(
+                $this->createCspHeader($categorized)
+            );
+        }
+
         return $markup;
     }
 
@@ -76,25 +79,33 @@ class ContentSecurityPolicy
     /**
      * Creates a Content Security Policy header string from the provided domains.
      *
-     * @param array $domains The list of domains to include in the CSP header.
+     * @param array $categorizedDomains The list of categorized domains to include in the CSP header.
      * @return string The constructed CSP header string.
      */
-    private function createCspHeader(array $domains): string
+    private function createCspHeader(array $categorizedDomains): string
     {
         $csp = "default-src 'self';";
-        if (!empty($domains)) {
-            $csp .= " script-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " style-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " img-src 'self' data: " . implode(' ', $domains) . ";";
-            $csp .= " connect-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " font-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " object-src 'none';";
-            $csp .= " frame-ancestors 'none';";
-            $csp .= " base-uri 'self';";
-            $csp .= " form-action 'self';";
-            $csp .= " upgrade-insecure-requests;";
-            $csp .= " block-all-mixed-content;";
+
+        $directives = [
+            'script-src' => "'self' 'unsafe-inline'",
+            'style-src' => "'self' 'unsafe-inline'",
+            'img-src' => "'self' data:",
+            'connect-src' => "'self'",
+            'font-src' => "'self'",
+        ];
+
+        foreach ($directives as $directive => $default) {
+            $domains = $categorizedDomains[$directive] ?? [];
+            $csp .= " {$directive} {$default} " . implode(' ', $domains) . ";";
         }
+
+        $csp .= " object-src 'none';";
+        $csp .= " frame-ancestors 'none';";
+        $csp .= " base-uri 'self';";
+        $csp .= " form-action 'self';";
+        $csp .= " upgrade-insecure-requests;";
+        $csp .= " block-all-mixed-content;";
+
         return $csp;
     }
 
@@ -102,16 +113,64 @@ class ContentSecurityPolicy
      * Extracts unique domains from the provided HTML markup.
      *
      * @param string $markup The HTML markup to search for domains.
-     * @return array An array of unique domain names found in the markup.
+     * @return array An array of categorized domain names found in the markup.
      */
     private function getDomainsFromMarkup($markup): array
     {
-        $domains = [];
-        preg_match_all(self::LINK_REGEX, $markup, $matches);
-        if (isset($matches[1])) {
-            $domains = array_unique($matches[1]);
+        $categories = [
+            'script-src' => [],
+            'img-src' => [],
+            'style-src' => [],
+            'connect-src' => [],
+            'font-src' => [],
+        ];
+
+        // Match element attributes (src, href, etc.)
+        preg_match_all(self::LINK_REGEX, $markup, $matches, PREG_SET_ORDER);
+        foreach ($matches as $match) {
+            [$full, $tag, $domain] = $match;
+            $domain = strtolower($domain);
+            switch ($tag) {
+                case 'script':
+                    $categories['script-src'][] = $domain;
+                    break;
+                case 'img':
+                case 'source':
+                case 'video':
+                case 'audio':
+                case 'object':
+                case 'embed':
+                    $categories['img-src'][] = $domain;
+                    break;
+                case 'link':
+                    $categories['style-src'][] = $domain;
+                    break;
+                case 'iframe':
+                case 'frame':
+                case 'form':
+                    $categories['connect-src'][] = $domain;
+                    break;
+                case 'font':
+                    $categories['font-src'][] = $domain;
+                    break;
+            }
         }
-        return $domains;
+
+        if (preg_match_all('/<script[^>]*>(.*?)<\/script>/is', $markup, $scriptMatches)) {
+            foreach ($scriptMatches[1] as $scriptContent) {
+                $scriptContent = str_replace('\/', '/', $scriptContent);
+                if (preg_match_all('/https?:\/\/([a-z0-9.-]+)/i', $scriptContent, $jsonMatches)) {
+                    $categories['img-src'] = array_merge($categories['img-src'], $jsonMatches[1]);
+                }
+            }
+        }
+
+        // Ensure uniqueness
+        foreach ($categories as $key => $domains) {
+            $categories[$key] = array_unique($domains);
+        }
+
+        return $categories;
     }
 
     /**
