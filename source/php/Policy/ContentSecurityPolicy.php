@@ -88,7 +88,7 @@ class ContentSecurityPolicy
             $csp .= " img-src 'self' data: " . implode(' ', $domains) . ";";
             $csp .= " connect-src 'self' " . implode(' ', $domains) . ";";
             $csp .= " font-src 'self' " . implode(' ', $domains) . ";";
-            $cst .= " frame-ancestors 'self' " . implode(' ', $domains) . ";";
+            $csp .= " frame-ancestors 'self' " . implode(' ', $domains) . ";";
             $csp .= " object-src 'self' " . implode(' ', $domains) . ";";
             $csp .= " base-uri 'self';";
             $csp .= " form-action 'self';";
