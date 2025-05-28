@@ -15,7 +15,7 @@ use WpService\WpService;
  */
 class ContentSecurityPolicy
 {
-    const LINK_REGEX = '/<(script|img|link|iframe|source|form|video|audio|object|embed|frame)[^>]+(?:src|href|data|action)=["\']https?:\/\/([a-z0-9.-]+)/i';
+    const LINK_REGEX = '/https?:\\\\?\/\\\\?\/([a-z0-9.-]+)/i';
 
     public function __construct(private WpService $wpService){}
 
@@ -26,7 +26,7 @@ class ContentSecurityPolicy
      */
     public function addHooks(): void
     {
-        $this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1); 
+        $this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1);
     }
 
     /**
@@ -37,23 +37,21 @@ class ContentSecurityPolicy
      */
     public function read($markup): string
     {
-        $categorized = $this->getDomainsFromMarkup($markup);
-
-        $extra = array_merge(
+        $domains = $this->getDomainsFromMarkup($markup);
+        $domains = array_merge(
+            $domains,
             $this->getDomainsFromLocalizedScripts(),
             $this->getContentDomains()
         );
 
-        foreach ($categorized as &$domains) {
-            $domains = array_unique(array_merge($domains, $extra));
-        }
+        $domains = array_unique($domains);
+        $domains = array_filter($domains);
 
-        if (!empty(array_filter($categorized))) {
-            $this->sendCspHeaders(
-                $this->createCspHeader($categorized)
-            );
+        if (!empty($domains)) {
+          $this->sendCspHeaders(
+            $this->createCspHeader($domains)
+          );
         }
-
         return $markup;
     }
 
@@ -78,33 +76,25 @@ class ContentSecurityPolicy
     /**
      * Creates a Content Security Policy header string from the provided domains.
      *
-     * @param array $categorizedDomains The list of categorized domains to include in the CSP header.
+     * @param array $domains The list of domains to include in the CSP header.
      * @return string The constructed CSP header string.
      */
-    private function createCspHeader(array $categorizedDomains): string
+    private function createCspHeader(array $domains): string
     {
         $csp = "default-src 'self';";
-
-        $directives = [
-            'script-src' => "'self' 'unsafe-inline'",
-            'style-src' => "'self' 'unsafe-inline'",
-            'img-src' => "'self' data:",
-            'connect-src' => "'self'",
-            'font-src' => "'self'",
-        ];
-
-        foreach ($directives as $directive => $default) {
-            $domains = $categorizedDomains[$directive] ?? [];
-            $csp .= " {$directive} {$default} " . implode(' ', $domains) . ";";
+        if (!empty($domains)) {
+            $csp .= " script-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
+            $csp .= " style-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
+            $csp .= " img-src 'self' data: " . implode(' ', $domains) . ";";
+            $csp .= " connect-src 'self' " . implode(' ', $domains) . ";";
+            $csp .= " font-src 'self' " . implode(' ', $domains) . ";";
+            $cst .= " frame-ancestors 'self' " . implode(' ', $domains) . ";";
+            $csp .= " object-src 'self' " . implode(' ', $domains) . ";";
+            $csp .= " base-uri 'self';";
+            $csp .= " form-action 'self';";
+            $csp .= " upgrade-insecure-requests;";
+            $csp .= " block-all-mixed-content;";
         }
-
-        $csp .= " object-src 'none';";
-        $csp .= " frame-ancestors 'none';";
-        $csp .= " base-uri 'self';";
-        $csp .= " form-action 'self';";
-        $csp .= " upgrade-insecure-requests;";
-        $csp .= " block-all-mixed-content;";
-
         return $csp;
     }
 
@@ -112,87 +102,16 @@ class ContentSecurityPolicy
      * Extracts unique domains from the provided HTML markup.
      *
      * @param string $markup The HTML markup to search for domains.
-     * @return array An array of categorized domain names found in the markup.
+     * @return array An array of unique domain names found in the markup.
      */
     private function getDomainsFromMarkup($markup): array
     {
-        $categories = [
-            'script-src' => [],
-            'img-src' => [],
-            'style-src' => [],
-            'connect-src' => [],
-            'font-src' => [],
-        ];
-
-        $dataAttributesToCspCategory = [
-            'connect-src' => ['data-src'],
-            'frame-src' => ['data-src'],
-        ];
-
-        // Match element attributes (src, href, etc.)
-        preg_match_all(self::LINK_REGEX, $markup, $matches, PREG_SET_ORDER);
-        foreach ($matches as $match) {
-            [$full, $tag, $domain] = $match;
-            $domain = strtolower($domain);
-            switch ($tag) {
-                case 'script':
-                    $categories['script-src'][] = $domain;
-                    break;
-                case 'img':
-                case 'source':
-                case 'video':
-                case 'audio':
-                case 'object':
-                case 'embed':
-                    $categories['img-src'][] = $domain;
-                    break;
-                case 'link':
-                    $categories['style-src'][] = $domain;
-                    break;
-                case 'iframe':
-                case 'frame':
-                case 'form':
-                    $categories['connect-src'][] = $domain;
-                    break;
-                case 'font':
-                    $categories['font-src'][] = $domain;
-                    break;
-            }
+        $domains = [];
+        preg_match_all(self::LINK_REGEX, $markup, $matches);
+        if (isset($matches[1])) {
+            $domains = array_unique($matches[1]);
         }
-
-        if (preg_match_all('/<script[^>]*>(.*?)<\/script>/is', $markup, $scriptMatches)) {
-            foreach ($scriptMatches[1] as $scriptContent) {
-                $scriptContent = str_replace('\/', '/', $scriptContent);
-                if (preg_match_all('/https?:\/\/([a-z0-9.-]+)/i', $scriptContent, $jsonMatches)) {
-                    $categories['img-src'] = array_merge($categories['img-src'], $jsonMatches[1]);
-                }
-            }
-        }
-
-        foreach ($dataAttributesToCspCategory as $category => $attributes) {
-            foreach ($attributes as $attr) {
-                $pattern = '/'.preg_quote($attr, '/').'=["\']\[(.*?)\]["\']/i';
-                if (preg_match_all($pattern, $markup, $attrMatches)) {
-                    foreach ($attrMatches[1] as $jsonString) {
-                        $decoded = html_entity_decode($jsonString, ENT_QUOTES);
-                        $urls = json_decode($decoded, true);
-                        if (is_array($urls)) {
-                            foreach ($urls as $url) {
-                                if (preg_match('/https?:\/\/([a-z0-9.-]+)/i', $url, $urlMatch)) {
-                                    $categories[$category][] = strtolower($urlMatch[1]);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        foreach ($categories as $key => $domains) {
-            $categories[$key] = array_unique($domains);
-        }
-
-        return $categories;
+        return $domains;
     }
 
     /**
@@ -245,11 +164,12 @@ class ContentSecurityPolicy
     public function getContentDomains() : array
     {
         $domains = $this->wpService->wpUploadDir();
+
         $domains = array_reduce(
             $domains,
             function ($carry, $item) {
-                if(preg_match('/^https?:\/\//i', $item)) {
-                    $carry[] = parse_url($item)['host'] ?? null;
+                if (isset($item['baseurl'])) {
+                    $carry[] = parse_url($item['baseurl'])['host'] ?? null;
                 }
                 return $carry;
             },
