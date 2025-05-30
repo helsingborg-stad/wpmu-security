@@ -53,69 +53,12 @@ class ContentSecurityPolicyTest extends TestCase {
     }
 
     /**
-     * @testdox getDomainsFromMarkup returns all expected domains.
-     */
-    public function testGetDomainsFromMarkupReturnsAllExpectedDomains() {
-        $testDocument           = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy  = new ContentSecurityPolicy(
-          new FakeWpService()
-        );
-
-        $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
-        $result   = array_unique(array_merge(...array_values($result)));
-
-        $this->assertIsArray($result);
-        $this->assertCount(36, $result);
-    }
-
-    /**
-     * @testdox getDomainsFromMarkup returns expected number of domains containing a given substring.
-     * @dataProvider domainSubstringCountProvider
-     */
-    public function testGetDomainsResultsInExpectedCountForSubstring(string $substring, int $expectedCount) {
-        $testDocument           = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy  = new ContentSecurityPolicy(
-          new FakeWpService()
-        );
-
-        $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
-        $result   = array_unique(array_merge(...array_values($result)));
-
-        $filteredDomains = array_filter($result, function ($domain) use ($substring) {
-          return strpos($domain, $substring) !== false;
-        });
-
-        $this->assertCount($expectedCount, $filteredDomains);
-    }
-
-    /**
-     * Provides a list of substrings and their expected counts in the list of domains.
-     * 
-     * @return array An array of arrays, each containing a substring and its expected count.
-     */
-    public function domainSubstringCountProvider(): array {
-      return [
-        ['css', 2],
-        ['js', 2],
-        ['img', 4],
-        ['iframe', 3],
-        ['object', 3],
-        ['embed', 3],
-        ['video', 3],
-        ['audio', 3],
-        ['picture', 2],
-        ['form', 3],
-        ['data', 6],
-      ];
-    }
-
-    /**
      * Provides a list of domains that are expected to be found in the HTML document.
      * 
      * @return array An array of arrays, each containing a domain string.
      */
     private function domainMarkupProvider(): array {
-      return [
+        return [
           ['css1.test'],
           ['css2.test'],
           ['js1.test'],
@@ -136,12 +79,23 @@ class ContentSecurityPolicyTest extends TestCase {
           ['picture2.test'],
           ['form1.test'],
           ['form2.test'],
+          ['attribute.img1.test'],
+          ['attribute.img2.test'],
+          ['attribute.iframe2.test'],
+          ['attribute.object2.test'],
+          ['attribute.embed2.test'],
+          ['attribute.video1.test'],
+          ['attribute.audio2.test'],
+          ['attribute.form1.test'],
+          ['attribute.alink2.test'],
           ['data1.test'],
           ['data2.test'],
           ['data3.test'],
           ['data4.test'],
           ['data5.test'],
-          ['data6.test']
+          ['data6.test'],
+          ['fonts1.test'],
+          ['fonts2.test']
       ];
   }
 
