@@ -77,6 +77,7 @@ class ContentSecurityPolicyTest extends TestCase {
           ['audio2.test'],
           ['picture1.test'],
           ['picture2.test'],
+          ['picture3.test'],
           ['form1.test'],
           ['form2.test'],
           ['attribute.img1.test'],
