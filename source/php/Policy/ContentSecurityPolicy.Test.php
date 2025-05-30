@@ -57,7 +57,7 @@ class ContentSecurityPolicyTest extends TestCase {
         $result = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
 
         $this->assertIsArray($result);
-        $this->assertCount(26, $result);
+        $this->assertCount(36, $result);
     }
 
     /**
@@ -67,17 +67,48 @@ class ContentSecurityPolicyTest extends TestCase {
         $testDocument = $this->testHTMLDocumentProvider();
         $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
 
-
         $resultFromMarkup       = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
         $resultFromCategorized  = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
-
-
         var_dump($resultFromCategorized);
 
-
         $resultFromCategorized  = array_unique(array_merge(...array_values($resultFromCategorized)));
+
+        usort($resultFromMarkup,      'strcasecmp');
+        usort($resultFromCategorized, 'strcasecmp');
         
-        //$this->assertEqualsCanonicalizing($resultFromMarkup, $resultFromCategorized);
+        $this->assertEqualsCanonicalizing($resultFromCategorized, $resultFromMarkup);
+    }
+
+    /**
+     * @testdox getDomainsFromMarkup returns expected number of domains containing a given substring.
+     * @dataProvider domainSubstringCountProvider
+     */
+    public function testGetDomainsResultsInExpectedCountForSubstring(string $substring, int $expectedCount) {
+      $testDocument = $this->testHTMLDocumentProvider();
+      $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
+      $result = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
+
+      $filteredDomains = array_filter($result, function ($domain) use ($substring) {
+        return strpos($domain, $substring) !== false;
+      });
+
+      $this->assertCount($expectedCount, $filteredDomains);
+    }
+
+    public function domainSubstringCountProvider(): array {
+      return [
+        ['css', 2],
+        ['js', 2],
+        ['img', 4],
+        ['iframe', 3],
+        ['object', 3],
+        ['embed', 3],
+        ['video', 3],
+        ['audio', 3],
+        ['picture', 2],
+        ['form', 3],
+        ['data', 6],
+      ];
     }
 
     private function testHTMLDocumentProvider(): string {
