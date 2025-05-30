@@ -32,6 +32,9 @@ class SubResourceIntegrity
      */
     public function addSriToScript(string $tag, string $handle, string $src): string
     {
+        if($this->wpService->isAdmin()) {
+            return $tag;
+        }
         $integrity = $this->maybeGetCachedIntegrityHash($src);
         if ($integrity) {
             $tag = str_replace(' src=', ' integrity="' . esc_attr($integrity) . '" crossorigin="anonymous" src=', $tag);
@@ -50,8 +53,11 @@ class SubResourceIntegrity
      */
     public function addSriToStyle(string $tag, string $handle, string $href, ?string $media = null): string
     {
-        $integrity = $this->maybeGetCachedIntegrityHash($href);
+        if($this->wpService->isAdmin()) {
+            return $tag;
+        }
 
+        $integrity = $this->maybeGetCachedIntegrityHash($href);
         if ($integrity) {
           $tag = str_replace(' href=', ' integrity="' . esc_attr($integrity) . '" crossorigin="anonymous" href=', $tag);
         }
