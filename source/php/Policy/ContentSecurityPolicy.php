@@ -104,10 +104,13 @@ class ContentSecurityPolicy
      * @param string $markup The HTML markup to search for domains.
      * @return array An array of unique domain names found in the markup.
      */
-    private function getDomainsFromMarkup($markup): array
+    public function getDomainsFromMarkup($markup): array
     {
+        // Remove all anchor elements to ignore their href values
+        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
+
         $domains = [];
-        preg_match_all(self::LINK_REGEX, $markup, $matches);
+        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
         if (isset($matches[1])) {
             $domains = array_unique($matches[1]);
         }
