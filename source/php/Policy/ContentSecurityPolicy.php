@@ -130,42 +130,39 @@ class ContentSecurityPolicy
     public function getCategorizedDomainsFromMarkup($markup): array
     {
         $domains = [
-            'scripts' => [],
-            'styles' => [],
-            'images' => [],
-            'fonts' => [],
-            'others' => []
+            'script-src' => [],
+            'style-src' => [],
+            'img-src' => [],
+            'font-src' => [],
+            'connect-src' => [],
+            'frame-ancestors' => [],
+            'object-src' => [],
+            'others' => [],
         ];
 
-        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
-        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
-        if (isset($matches[1])) {
-            foreach ($matches[1] as $domain) {
-                $parsedUrl = parse_url($domain);
-                if (isset($parsedUrl['path'])) {
-                    $path = $parsedUrl['path'];
-                    $extension = pathinfo($path, PATHINFO_EXTENSION);
-                    switch ($extension) {
-                        case 'js':
-                            $domains['scripts'][] = $domain;
-                            break;
-                        case 'css':
-                            $domains['styles'][] = $domain;
-                            break;
-                        case 'jpg':
-                        case 'jpeg':
-                        case 'png':
-                        case 'gif':
-                        case 'webp':
-                            $domains['images'][] = $domain;
-                            break;
-                        case 'woff':
-                        case 'woff2':
-                        case 'ttf':
-                            $domains['fonts'][] = $domain;
-                            break;
-                        default:
-                            $domains['others'][] = $domain;
+        libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML($markup);
+        $xpath = new \DOMXPath($dom);
+
+        $tagMap = [
+            'script' => 'script-src',
+            'link' => 'style-src',
+            'img' => 'img-src',
+            'iframe' => 'frame-ancestors',
+            'object' => 'object-src',
+            'embed' => 'object-src',
+            'form' => 'connect-src',
+            'input' => 'connect-src',
+            // intentionally excluding <a> and others
+        ];
+
+        foreach ($tagMap as $tag => $directive) {
+            foreach ($xpath->query("//{$tag}") as $node) {
+                $outerHtml = $dom->saveHTML($node);
+                if (preg_match_all(self::LINK_REGEX, $outerHtml, $matches)) {
+                    foreach ($matches[1] as $matchedDomain) {
+                        $domains[$directive][] = $matchedDomain;
                     }
                 }
             }
