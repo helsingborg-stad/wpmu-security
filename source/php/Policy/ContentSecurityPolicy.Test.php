@@ -25,9 +25,9 @@ class ContentSecurityPolicyTest extends TestCase {
       $contentSecurityPolicy  = new ContentSecurityPolicy(
         new FakeWpService()
       );
-      $result = $contentSecurityPolicy->getDomainsFromMarkup(
-        $testDocument
-      );
+
+      $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
+      $result   = array_unique(array_merge(...array_values($result)));
 
       $this->assertIsArray($result);
       $this->assertNotContains('alink1.test', $result);
@@ -40,47 +40,25 @@ class ContentSecurityPolicyTest extends TestCase {
      */
     public function testExpectedDomainsAreRecivedFromDocument(string $expectedDomain)
     {
-        $testDocument = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
-        $result = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
+        $testDocument           = $this->testHTMLDocumentProvider();
+        $contentSecurityPolicy  = new ContentSecurityPolicy(
+          new FakeWpService()
+        );
+
+        $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
+        $result   = array_unique(array_merge(...array_values($result)));
 
         $this->assertIsArray($result);
         $this->assertContains($expectedDomain, $result);
     }
 
     /**
-     * @testdox getDomainsFromMarkup returns all expected domains.
+     * Provides a list of domains that are expected to be found in the HTML document.
+     * 
+     * @return array An array of arrays, each containing a domain string.
      */
-    public function testGetDomainsFromMarkupReturnsAllExpectedDomains() {
-        $testDocument = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
-        $result = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
-
-        $this->assertIsArray($result);
-        $this->assertCount(26, $result);
-    }
-
-    /**
-     * @testdox getDomainsFromMarkup and getCategorizedDomainsFromMarkup return the same domains.
-     */
-    public function testGetDomainsFromMarkupReturnsSameDomainsAsGetCategorizedDomainsFromMarkup() {
-        $testDocument = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
-
-
-        $resultFromMarkup       = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
-        $resultFromCategorized  = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
-        $resultFromCategorized  = array_merge(...array_values($resultFromCategorized));
-        
-        $this->assertEqualsCanonicalizing($resultFromMarkup, $resultFromCategorized);
-    }
-
-    private function testHTMLDocumentProvider(): string {
-        return file_get_contents(__DIR__ . '/ContentSecurityPolicyTest.html');
-    }
-
     private function domainMarkupProvider(): array {
-      return [
+        return [
           ['css1.test'],
           ['css2.test'],
           ['js1.test'],
@@ -99,14 +77,35 @@ class ContentSecurityPolicyTest extends TestCase {
           ['audio2.test'],
           ['picture1.test'],
           ['picture2.test'],
+          ['picture3.test'],
           ['form1.test'],
           ['form2.test'],
+          ['attribute.img1.test'],
+          ['attribute.img2.test'],
+          ['attribute.iframe2.test'],
+          ['attribute.object2.test'],
+          ['attribute.embed2.test'],
+          ['attribute.video1.test'],
+          ['attribute.audio2.test'],
+          ['attribute.form1.test'],
+          ['attribute.alink2.test'],
           ['data1.test'],
           ['data2.test'],
           ['data3.test'],
           ['data4.test'],
           ['data5.test'],
-          ['data6.test']
+          ['data6.test'],
+          ['fonts1.test'],
+          ['fonts2.test']
       ];
+  }
+
+  /**
+   * Provides a sample HTML document for testing.
+   *
+   * @return string The HTML content as a string.
+   */
+  private function testHTMLDocumentProvider(): string {
+      return file_get_contents(__DIR__ . '/ContentSecurityPolicyTest.html');
   }
 }

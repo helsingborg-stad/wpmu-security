@@ -4,6 +4,8 @@ namespace WPMUSecurity\Policy;
 
 use WP;
 use WpService\WpService;
+use DOMDocument;
+use DOMXPath;
 
 /**
  * Class ContentSecurityPolicy
@@ -35,24 +37,11 @@ class ContentSecurityPolicy
      * @param string $markup The HTML markup to process.
      * @return string The original markup with CSP headers sent.
      */
-    public function read($markup): string
+    public function read($markup): void
     {
-        $domains = $this->getDomainsFromMarkup($markup);
-        $domains = array_merge(
-            $domains,
-            $this->getDomainsFromLocalizedScripts(),
-            $this->getContentDomains()
-        );
-
-        $domains = array_unique($domains);
-        $domains = array_filter($domains);
-
-        if (!empty($domains)) {
-          $this->sendCspHeaders(
-            $this->createCspHeader($domains)
-          );
-        }
-        return $markup;
+        $cspPolicies    = $this->getCategorizedDomainsFromMarkup($markup);
+        $cspHeader      = $this->createCategorizedCspHeader($cspPolicies);
+        $this->sendCspHeaders($cspHeader);
     }
 
     /**
@@ -74,49 +63,28 @@ class ContentSecurityPolicy
     }
 
     /**
-     * Creates a Content Security Policy header string from the provided domains.
+     * Creates a categorized Content Security Policy header string from the provided policies.
      *
-     * @param array $domains The list of domains to include in the CSP header.
-     * @return string The constructed CSP header string.
+     * @param array $cspPolicies The categorized CSP policies with their respective URLs.
+     * @return string The constructed categorized CSP header string.
      */
-    private function createCspHeader(array $domains): string
+    private function createCategorizedCspHeader(array $cspPolicies): string
     {
-        $csp = "default-src 'self';";
-        if (!empty($domains)) {
-            $csp .= " script-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " style-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " img-src 'self' data: " . implode(' ', $domains) . ";";
-            $csp .= " connect-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " font-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " frame-ancestors 'self' " . implode(' ', $domains) . ";";
-            $csp .= " object-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " base-uri 'self';";
-            $csp .= " form-action 'self';";
-            $csp .= " upgrade-insecure-requests;";
-            $csp .= " block-all-mixed-content;";
+        $csp = '';
+        foreach ($cspPolicies as $policy => $urls) {
+            if (!empty($urls)) {
+                $csp .= "$policy 'self' " . implode(' ', $urls) . "; ";
+            }
         }
-        return $csp;
+
+        $csp .= " base-uri 'self';";
+        $csp .= " form-action 'self';";
+        $csp .= " upgrade-insecure-requests;";
+        $csp .= " block-all-mixed-content;";
+        $csp .= " require-trusted-types-for 'script';";
+
+        return rtrim($csp, '; ');
     }
-
-    /**
-     * Extracts unique domains from the provided HTML markup.
-     *
-     * @param string $markup The HTML markup to search for domains.
-     * @return array An array of unique domain names found in the markup.
-     */
-    public function getDomainsFromMarkup($markup): array
-    {
-        // Remove all anchor elements to ignore their href values
-        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
-
-        $domains = [];
-        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
-        if (isset($matches[1])) {
-            $domains = array_unique($matches[1]);
-        }
-        return $domains;
-    }
-
 
     /**
      * Extracts and categorizes domains from the provided HTML markup.
@@ -127,115 +95,161 @@ class ContentSecurityPolicy
      * @param string $markup The HTML markup to search for domains.
      * @return array An associative array with categorized domains.
      */
-    public function getCategorizedDomainsFromMarkup($markup): array
-    {
-        $domains = [
-            'scripts' => [],
-            'styles' => [],
-            'images' => [],
-            'fonts' => [],
-            'others' => []
+    public function getCategorizedDomainsFromMarkup($html) {
+        $dom = new DOMDocument();
+        // Suppress warnings for malformed HTML
+        @$dom->loadHTML($html);
+        $xpath = new DOMXPath($dom);
+    
+        $cspPolicies = [
+            'script-src' => [],
+            'style-src' => [],
+            'img-src' => [],
+            'media-src' => [],
+            'frame-src' => [],
+            'object-src' => [],
+            'form-action' => [],
+            'font-src' => [],
+            'connect-src' => [],
         ];
+    
+        // Scripts
+        $scriptElements = $xpath->query('//script[@src]');
+        foreach ($scriptElements as $script) {
+            $this->addUniqueDomain($cspPolicies['script-src'], $script->getAttribute('src'));
+        }
+        // Check if unsafe-inline scripts are needed
+        $inlineScriptElements = $xpath->query('//script[not(@src) and normalize-space(.) != ""]');
+        if ($inlineScriptElements->length > 0) {
+            if (!in_array("'unsafe-inline'", $cspPolicies['script-src'])) {
+                $cspPolicies['script-src'][] = "'unsafe-inline'";
+            }
+        }
+    
+        //Stylesheets
+        $linkElements = $xpath->query('//link[@rel="stylesheet" and @href]');
+        foreach ($linkElements as $link) {
+            $this->addUniqueDomain($cspPolicies['style-src'], $link->getAttribute('href'));
+        }
 
-        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
-        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
-        if (isset($matches[1])) {
-            foreach ($matches[1] as $domain) {
-                $parsedUrl = parse_url($domain);
-                if (isset($parsedUrl['path'])) {
-                    $path = $parsedUrl['path'];
-                    $extension = pathinfo($path, PATHINFO_EXTENSION);
-                    switch ($extension) {
-                        case 'js':
-                            $domains['scripts'][] = $domain;
-                            break;
-                        case 'css':
-                            $domains['styles'][] = $domain;
-                            break;
-                        case 'jpg':
-                        case 'jpeg':
-                        case 'png':
-                        case 'gif':
-                        case 'webp':
-                            $domains['images'][] = $domain;
-                            break;
-                        case 'woff':
-                        case 'woff2':
-                        case 'ttf':
-                            $domains['fonts'][] = $domain;
-                            break;
-                        default:
-                            $domains['others'][] = $domain;
+        // Inline styles
+        $styleElements = $xpath->query('//style');
+        if ($styleElements->length > 0) {
+            if (!in_array("'unsafe-inline'", $cspPolicies['style-src'])) {
+                $cspPolicies['style-src'][] = "'unsafe-inline'";
+            }
+        }
+
+        //Check if unsafe-inline styles are needed
+        $allElementsWithStyleAttr = $xpath->query('//*[@style]');
+        if ($allElementsWithStyleAttr->length > 0) {
+             if (!in_array("'unsafe-inline'", $cspPolicies['style-src'])) {
+                $cspPolicies['style-src'][] = "'unsafe-inline'";
+            }
+        }
+    
+        // Images 
+        $imgElements = $xpath->query('//img[@src]');
+        foreach ($imgElements as $img) {
+            $this->addUniqueDomain($cspPolicies['img-src'], $img->getAttribute('src'));
+        }
+
+        // Picture
+        $pictureSourceElements = $xpath->query('//picture/source[@srcset]');
+        foreach ($pictureSourceElements as $source) {
+            // srcset can contain multiple URLs, but for CSP it's usually just the origin we care about
+            $srcset = $source->getAttribute('srcset');
+            // Basic parsing for single URL in srcset for demonstration
+            $urls = explode(',', $srcset);
+            foreach ($urls as $urlPart) {
+                $url = trim(explode(' ', $urlPart)[0]); // Get the URL before any descriptors
+                $this->addUniqueDomain($cspPolicies['img-src'], $url);
+            }
+        }
+    
+        //Video and audio sources
+        $mediaSourceElements = $xpath->query('//video/source[@src] | //audio/source[@src]');
+        foreach ($mediaSourceElements as $source) {
+            $this->addUniqueDomain($cspPolicies['media-src'], $source->getAttribute('src'));
+        }
+    
+        // Iframes
+        $iframeElements = $xpath->query('//iframe[@src]');
+        foreach ($iframeElements as $iframe) {
+            $this->addUniqueDomain($cspPolicies['frame-src'], $iframe->getAttribute('src'));
+        }
+    
+        //Object and embed sources
+        $objectElements = $xpath->query('//object[@data]');
+        foreach ($objectElements as $object) {
+            $this->addUniqueDomain($cspPolicies['object-src'], $object->getAttribute('data'));
+        }
+        $embedElements = $xpath->query('//embed[@src]');
+        foreach ($embedElements as $embed) {
+            $this->addUniqueDomain($cspPolicies['object-src'], $embed->getAttribute('src'));
+        }
+    
+        // Form actions
+        $formElements = $xpath->query('//form[@action]');
+        foreach ($formElements as $form) {
+            $this->addUniqueDomain($cspPolicies['form-action'], $form->getAttribute('action'));
+        }
+    
+        // Inline fonts in style attributes
+        foreach ($styleElements as $style) {
+            $inlineCss = $style->nodeValue;
+            preg_match_all('/url\((["\']?)(.*?)\1\)\s*format\((["\']?)(.*?)\3\)/i', $inlineCss, $matches, PREG_SET_ORDER);
+            foreach ($matches as $match) {
+                // Check if it's a font format
+                if (preg_match('/woff|ttf|otf|eot|svg|font/', $match[4])) {
+                    $this->addUniqueDomain($cspPolicies['font-src'], $match[2]);
+                }
+            }
+        }
+    
+        foreach ($xpath->query('//*') as $element) {
+            if ($element->hasAttributes()) {
+                foreach ($element->attributes as $attr) {
+                    $value = $attr->value;
+                    if (filter_var($value, FILTER_VALIDATE_URL)) {
+                        $this->addUniqueDomain($cspPolicies['connect-src'], $value);
+                    } else {
+                        if (preg_match_all('/https?:\/\/[^\s"\'>]+/i', $value, $matches)) {
+                            foreach ($matches[0] as $url) {
+                                if (filter_var($url, FILTER_VALIDATE_URL)) {
+                                    $this->addUniqueDomain($cspPolicies['connect-src'], $url);
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-
-        return array_map('array_unique', $domains);
-    }
-
-    /**
-     * Extracts domains from localized scripts registered in WordPress.
-     *
-     * This method checks both the 'extra' data of scripts and their localizations
-     * to find any URLs that match the defined regex pattern.
-     *
-     * @return array An array of unique domain names found in localized scripts.
-     */
-    public function getDomainsFromLocalizedScripts(): array
-    {
-        $domains = [];
-        $scripts = wp_scripts()->registered ?? [];
-
-        foreach ($scripts as $script) {
-            // Check 'localize' data
-            if (!empty($script->extra['data'])) {
-
-                if($jsonDecoded = json_decode($script->extra['data'])) {
-                  $script->extra['data'] = $jsonDecoded;
-                }
-
-                preg_match_all(self::LINK_REGEX, $script->extra['data'], $matches);
-                if (!empty($matches[1])) {
-                    $domains = array_merge($domains, $matches[1]);
-                }
-            }
-
-            // Check directly localized data
-            if (!empty($script->localizations)) {
-                foreach ($script->localizations as $localization) {
-                    $json = wp_json_encode($localization);
-                    preg_match_all(self::LINK_REGEX, $json, $matches);
-                    if (!empty($matches[1])) {
-                        $domains = array_merge($domains, $matches[1]);
-                    }
-                }
+    
+        // Filter out empty arrays and sort URLs
+        foreach ($cspPolicies as $policy => &$urls) {
+            sort($urls);
+            if (empty($urls)) {
+                $cspPolicies[$policy] = ["'none'"];
             }
         }
-
-        return $domains;
+        
+        return $cspPolicies;
     }
 
     /**
-     * Gets the wp-content domains for the current WordPress site.
+     * Adds a unique domain to the provided array if it is a valid URL.
      *
-     * @return arrat An array of unique domain names for the wp-content directory.
+     * @param array $array The array to which the domain will be added.
+     * @param string $url The URL from which to extract the domain.
      */
-    public function getContentDomains() : array
-    {
-        $domains = $this->wpService->wpUploadDir();
-
-        $domains = array_reduce(
-            $domains,
-            function ($carry, $item) {
-                if (isset($item['baseurl'])) {
-                    $carry[] = parse_url($item['baseurl'])['host'] ?? null;
-                }
-                return $carry;
-            },
-            []
-        );
-
-        return array_filter($domains);
+    private function addUniqueDomain(&$array, $url) {
+        if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL)) {
+            $host = parse_url($url, PHP_URL_HOST);
+            if ($host) {
+                $array[] = $host;
+                $array = array_unique($array);
+            }
+        }
     }
 }
