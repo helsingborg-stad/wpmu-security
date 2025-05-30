@@ -137,6 +137,7 @@ class ContentSecurityPolicy
             'connect-src' => [],
             'frame-ancestors' => [],
             'object-src' => [],
+            'media-src' => [],
             'others' => [],
         ];
 
@@ -154,15 +155,37 @@ class ContentSecurityPolicy
             'embed' => 'object-src',
             'form' => 'connect-src',
             'input' => 'connect-src',
-            // intentionally excluding <a> and others
+            'video' => 'media-src',
+            'audio' => 'media-src',
+            'source' => 'media-src',
+            'track' => 'media-src',
+            'picture' => 'img-src', // mostly used for <source> but useful for srcset attr
+            'div' => 'others', // to catch data-* attributes with links
         ];
 
         foreach ($tagMap as $tag => $directive) {
             foreach ($xpath->query("//{$tag}") as $node) {
                 $outerHtml = $dom->saveHTML($node);
+                foreach ($node->childNodes as $child) {
+                    if ($child->parentNode === $node && $child instanceof \DOMElement) {
+                        $outerHtml .= $dom->saveHTML($child);
+                    }
+                }
+
                 if (preg_match_all(self::LINK_REGEX, $outerHtml, $matches)) {
                     foreach ($matches[1] as $matchedDomain) {
-                        $domains[$directive][] = $matchedDomain;
+                        $path = parse_url($matchedDomain, PHP_URL_PATH) ?? '';
+                        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+                        if (in_array($ext, ['woff', 'woff2', 'ttf', 'otf', 'eot'])) {
+                            $domains['font-src'][] = $matchedDomain;
+                        } elseif ($directive === 'script-src' && !in_array($ext, ['js'])) {
+                            continue; // only include .js in script-src
+                        } elseif ($directive === 'object-src' && !in_array($tag, ['object', 'embed'])) {
+                            continue; // limit to actual embed/object tags
+                        } else {
+                            $domains[$directive][] = $matchedDomain;
+                        }
                     }
                 }
             }
