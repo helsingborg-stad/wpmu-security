@@ -3,7 +3,6 @@
 namespace WPMUSecurity\Policy;
 
 use PHPUnit\Framework\TestCase;
-use WP_Error;
 use WpService\Implementations\FakeWpService;
 
 class ContentSecurityPolicyTest extends TestCase {
