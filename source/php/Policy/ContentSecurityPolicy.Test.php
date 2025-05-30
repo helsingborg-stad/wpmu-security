@@ -25,9 +25,9 @@ class ContentSecurityPolicyTest extends TestCase {
       $contentSecurityPolicy  = new ContentSecurityPolicy(
         new FakeWpService()
       );
-      $result = $contentSecurityPolicy->getDomainsFromMarkup(
-        $testDocument
-      );
+
+      $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
+      $result   = array_unique(array_merge(...array_values($result)));
 
       $this->assertIsArray($result);
       $this->assertNotContains('alink1.test', $result);
@@ -40,9 +40,13 @@ class ContentSecurityPolicyTest extends TestCase {
      */
     public function testExpectedDomainsAreRecivedFromDocument(string $expectedDomain)
     {
-        $testDocument = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
-        $result = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
+        $testDocument           = $this->testHTMLDocumentProvider();
+        $contentSecurityPolicy  = new ContentSecurityPolicy(
+          new FakeWpService()
+        );
+
+        $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
+        $result   = array_unique(array_merge(...array_values($result)));
 
         $this->assertIsArray($result);
         $this->assertContains($expectedDomain, $result);
@@ -52,31 +56,16 @@ class ContentSecurityPolicyTest extends TestCase {
      * @testdox getDomainsFromMarkup returns all expected domains.
      */
     public function testGetDomainsFromMarkupReturnsAllExpectedDomains() {
-        $testDocument = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
-        $result = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
+        $testDocument           = $this->testHTMLDocumentProvider();
+        $contentSecurityPolicy  = new ContentSecurityPolicy(
+          new FakeWpService()
+        );
+
+        $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
+        $result   = array_unique(array_merge(...array_values($result)));
 
         $this->assertIsArray($result);
         $this->assertCount(36, $result);
-    }
-
-    /**
-     * @testdox getDomainsFromMarkup and getCategorizedDomainsFromMarkup return the same domains.
-     */
-    public function testGetDomainsFromMarkupReturnsSameDomainsAsGetCategorizedDomainsFromMarkup() {
-        $testDocument = $this->testHTMLDocumentProvider();
-        $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
-
-        $resultFromMarkup       = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
-        $resultFromCategorized  = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
-        var_dump($resultFromCategorized);
-
-        $resultFromCategorized  = array_unique(array_merge(...array_values($resultFromCategorized)));
-
-        usort($resultFromMarkup,      'strcasecmp');
-        usort($resultFromCategorized, 'strcasecmp');
-        
-        $this->assertEqualsCanonicalizing($resultFromCategorized, $resultFromMarkup);
     }
 
     /**
@@ -84,17 +73,26 @@ class ContentSecurityPolicyTest extends TestCase {
      * @dataProvider domainSubstringCountProvider
      */
     public function testGetDomainsResultsInExpectedCountForSubstring(string $substring, int $expectedCount) {
-      $testDocument = $this->testHTMLDocumentProvider();
-      $contentSecurityPolicy = new ContentSecurityPolicy(new FakeWpService());
-      $result = $contentSecurityPolicy->getDomainsFromMarkup($testDocument);
+        $testDocument           = $this->testHTMLDocumentProvider();
+        $contentSecurityPolicy  = new ContentSecurityPolicy(
+          new FakeWpService()
+        );
 
-      $filteredDomains = array_filter($result, function ($domain) use ($substring) {
-        return strpos($domain, $substring) !== false;
-      });
+        $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
+        $result   = array_unique(array_merge(...array_values($result)));
 
-      $this->assertCount($expectedCount, $filteredDomains);
+        $filteredDomains = array_filter($result, function ($domain) use ($substring) {
+          return strpos($domain, $substring) !== false;
+        });
+
+        $this->assertCount($expectedCount, $filteredDomains);
     }
 
+    /**
+     * Provides a list of substrings and their expected counts in the list of domains.
+     * 
+     * @return array An array of arrays, each containing a substring and its expected count.
+     */
     public function domainSubstringCountProvider(): array {
       return [
         ['css', 2],
@@ -111,10 +109,11 @@ class ContentSecurityPolicyTest extends TestCase {
       ];
     }
 
-    private function testHTMLDocumentProvider(): string {
-        return file_get_contents(__DIR__ . '/ContentSecurityPolicyTest.html');
-    }
-
+    /**
+     * Provides a list of domains that are expected to be found in the HTML document.
+     * 
+     * @return array An array of arrays, each containing a domain string.
+     */
     private function domainMarkupProvider(): array {
       return [
           ['css1.test'],
@@ -144,5 +143,14 @@ class ContentSecurityPolicyTest extends TestCase {
           ['data5.test'],
           ['data6.test']
       ];
+  }
+
+  /**
+   * Provides a sample HTML document for testing.
+   *
+   * @return string The HTML content as a string.
+   */
+  private function testHTMLDocumentProvider(): string {
+      return file_get_contents(__DIR__ . '/ContentSecurityPolicyTest.html');
   }
 }

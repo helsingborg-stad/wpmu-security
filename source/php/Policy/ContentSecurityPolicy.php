@@ -37,24 +37,11 @@ class ContentSecurityPolicy
      * @param string $markup The HTML markup to process.
      * @return string The original markup with CSP headers sent.
      */
-    public function read($markup): string
+    public function read($markup): void
     {
-        $domains = $this->getDomainsFromMarkup($markup);
-        $domains = array_merge(
-            $domains,
-            $this->getDomainsFromLocalizedScripts(),
-            $this->getContentDomains()
-        );
-
-        $domains = array_unique($domains);
-        $domains = array_filter($domains);
-
-        if (!empty($domains)) {
-          $this->sendCspHeaders(
-            $this->createCspHeader($domains)
-          );
-        }
-        return $markup;
+        $cspPolicies    = $this->getCategorizedDomainsFromMarkup($markup);
+        $cspHeader      = $this->createCategorizedCspHeader($cspPolicies);
+        $this->sendCspHeaders($cspHeader);
     }
 
     /**
@@ -76,49 +63,28 @@ class ContentSecurityPolicy
     }
 
     /**
-     * Creates a Content Security Policy header string from the provided domains.
+     * Creates a categorized Content Security Policy header string from the provided policies.
      *
-     * @param array $domains The list of domains to include in the CSP header.
-     * @return string The constructed CSP header string.
+     * @param array $cspPolicies The categorized CSP policies with their respective URLs.
+     * @return string The constructed categorized CSP header string.
      */
-    private function createCspHeader(array $domains): string
+    private function createCategorizedCspHeader(array $cspPolicies): string
     {
-        $csp = "default-src 'self';";
-        if (!empty($domains)) {
-            $csp .= " script-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " style-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " img-src 'self' data: " . implode(' ', $domains) . ";";
-            $csp .= " connect-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " font-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " frame-ancestors 'self' " . implode(' ', $domains) . ";";
-            $csp .= " object-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " base-uri 'self';";
-            $csp .= " form-action 'self';";
-            $csp .= " upgrade-insecure-requests;";
-            $csp .= " block-all-mixed-content;";
+        $csp = '';
+        foreach ($cspPolicies as $policy => $urls) {
+            if (!empty($urls)) {
+                $csp .= "$policy 'self' " . implode(' ', $urls) . "; ";
+            }
         }
-        return $csp;
+
+        $csp .= " base-uri 'self';";
+        $csp .= " form-action 'self';";
+        $csp .= " upgrade-insecure-requests;";
+        $csp .= " block-all-mixed-content;";
+        $csp .= " require-trusted-types-for 'script';";
+
+        return rtrim($csp, '; ');
     }
-
-    /**
-     * Extracts unique domains from the provided HTML markup.
-     *
-     * @param string $markup The HTML markup to search for domains.
-     * @return array An array of unique domain names found in the markup.
-     */
-    public function getDomainsFromMarkup($markup): array
-    {
-        // Remove all anchor elements to ignore their href values
-        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
-
-        $domains = [];
-        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
-        if (isset($matches[1])) {
-            $domains = array_unique($matches[1]);
-        }
-        return $domains;
-    }
-
 
     /**
      * Extracts and categorizes domains from the provided HTML markup.
@@ -144,25 +110,14 @@ class ContentSecurityPolicy
             'object-src' => [],
             'form-action' => [],
             'font-src' => [],
-            'connect-src' => [], // For data attributes that might imply a connection
+            'connect-src' => [],
         ];
-    
-        // Helper to add unique domains (hosts) to a policy array
-        function addUniqueDomain(&$array, $url) {
-            if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL)) {
-                $host = parse_url($url, PHP_URL_HOST);
-                if ($host) {
-                    $array[] = $host;
-                    $array = array_unique($array);
-                }
-            }
-        }
     
         // script-src
         // External scripts
         $scriptElements = $xpath->query('//script[@src]');
         foreach ($scriptElements as $script) {
-            addUniqueDomain($cspPolicies['script-src'], $script->getAttribute('src'));
+            $this->addUniqueDomain($cspPolicies['script-src'], $script->getAttribute('src'));
         }
         // Inline scripts are 'unsafe-inline' and don't have a source, but we can note their presence
         $inlineScriptElements = $xpath->query('//script[not(@src) and normalize-space(.) != ""]');
@@ -176,7 +131,7 @@ class ContentSecurityPolicy
         // External stylesheets
         $linkElements = $xpath->query('//link[@rel="stylesheet" and @href]');
         foreach ($linkElements as $link) {
-            addUniqueDomain($cspPolicies['style-src'], $link->getAttribute('href'));
+            $this->addUniqueDomain($cspPolicies['style-src'], $link->getAttribute('href'));
         }
         // Inline styles
         $styleElements = $xpath->query('//style');
@@ -193,11 +148,10 @@ class ContentSecurityPolicy
             }
         }
     
-    
         // img-src
         $imgElements = $xpath->query('//img[@src]');
         foreach ($imgElements as $img) {
-            addUniqueDomain($cspPolicies['img-src'], $img->getAttribute('src'));
+            $this->addUniqueDomain($cspPolicies['img-src'], $img->getAttribute('src'));
         }
         // Picture source srcset
         $pictureSourceElements = $xpath->query('//picture/source[@srcset]');
@@ -208,7 +162,7 @@ class ContentSecurityPolicy
             $urls = explode(',', $srcset);
             foreach ($urls as $urlPart) {
                 $url = trim(explode(' ', $urlPart)[0]); // Get the URL before any descriptors
-                addUniqueDomain($cspPolicies['img-src'], $url);
+                $this->addUniqueDomain($cspPolicies['img-src'], $url);
             }
         }
     
@@ -216,40 +170,40 @@ class ContentSecurityPolicy
         // media-src (video and audio)
         $mediaSourceElements = $xpath->query('//video/source[@src] | //audio/source[@src]');
         foreach ($mediaSourceElements as $source) {
-            addUniqueDomain($cspPolicies['media-src'], $source->getAttribute('src'));
+            $this->addUniqueDomain($cspPolicies['media-src'], $source->getAttribute('src'));
         }
         $videoElements = $xpath->query('//video[@src]'); // Direct video src
         foreach ($videoElements as $video) {
-            addUniqueDomain($cspPolicies['media-src'], $video->getAttribute('src'));
+            $this->addUniqueDomain($cspPolicies['media-src'], $video->getAttribute('src'));
         }
         $audioElements = $xpath->query('//audio[@src]'); // Direct audio src
         foreach ($audioElements as $audio) {
-            addUniqueDomain($cspPolicies['media-src'], $audio->getAttribute('src'));
+            $this->addUniqueDomain($cspPolicies['media-src'], $audio->getAttribute('src'));
         }
     
     
         // frame-src
         $iframeElements = $xpath->query('//iframe[@src]');
         foreach ($iframeElements as $iframe) {
-            addUniqueDomain($cspPolicies['frame-src'], $iframe->getAttribute('src'));
+            $this->addUniqueDomain($cspPolicies['frame-src'], $iframe->getAttribute('src'));
         }
     
     
         // object-src
         $objectElements = $xpath->query('//object[@data]');
         foreach ($objectElements as $object) {
-            addUniqueDomain($cspPolicies['object-src'], $object->getAttribute('data'));
+            $this->addUniqueDomain($cspPolicies['object-src'], $object->getAttribute('data'));
         }
         $embedElements = $xpath->query('//embed[@src]');
         foreach ($embedElements as $embed) {
-            addUniqueDomain($cspPolicies['object-src'], $embed->getAttribute('src'));
+            $this->addUniqueDomain($cspPolicies['object-src'], $embed->getAttribute('src'));
         }
     
     
         // form-action
         $formElements = $xpath->query('//form[@action]');
         foreach ($formElements as $form) {
-            addUniqueDomain($cspPolicies['form-action'], $form->getAttribute('action'));
+            $this->addUniqueDomain($cspPolicies['form-action'], $form->getAttribute('action'));
         }
     
         // font-src
@@ -260,7 +214,7 @@ class ContentSecurityPolicy
             foreach ($matches as $match) {
                 // Check if it's a font format
                 if (preg_match('/woff|ttf|otf|eot|svg|font/', $match[4])) {
-                    addUniqueDomain($cspPolicies['font-src'], $match[2]);
+                    $this->addUniqueDomain($cspPolicies['font-src'], $match[2]);
                 }
             }
         }
@@ -270,14 +224,14 @@ class ContentSecurityPolicy
         $dataElements = $xpath->query('//*[@data-link | @data-json | @data-serialized]');
         foreach ($dataElements as $element) {
             if ($element->hasAttribute('data-link')) {
-                addUniqueDomain($cspPolicies['connect-src'], $element->getAttribute('data-link'));
+                $this->addUniqueDomain($cspPolicies['connect-src'], $element->getAttribute('data-link'));
             }
             if ($element->hasAttribute('data-json')) {
                 $jsonData = json_decode($element->getAttribute('data-json'), true);
                 if (is_array($jsonData)) {
                     foreach ($jsonData as $key => $value) {
                         if (is_string($value)) {
-                            addUniqueDomain($cspPolicies['connect-src'], $value);
+                            $this->addUniqueDomain($cspPolicies['connect-src'], $value);
                         }
                     }
                 }
@@ -288,7 +242,7 @@ class ContentSecurityPolicy
                 if ($serializedData !== false && is_array($serializedData)) {
                     foreach ($serializedData as $key => $value) {
                         if (is_string($value)) {
-                            addUniqueDomain($cspPolicies['connect-src'], $value);
+                            $this->addUniqueDomain($cspPolicies['connect-src'], $value);
                         }
                     }
                 }
@@ -297,79 +251,28 @@ class ContentSecurityPolicy
     
         // Filter out empty arrays and sort URLs
         foreach ($cspPolicies as $policy => &$urls) {
-            sort($urls); // Sort URLs alphabetically for consistent output
+            sort($urls);
             if (empty($urls)) {
-                unset($cspPolicies[$policy]);
+                $cspPolicies[$policy] = ["'none'"];
             }
         }
-    
-        var_dump($cspPolicies);
-
+        
         return $cspPolicies;
     }
 
     /**
-     * Extracts domains from localized scripts registered in WordPress.
+     * Adds a unique domain to the provided array if it is a valid URL.
      *
-     * This method checks both the 'extra' data of scripts and their localizations
-     * to find any URLs that match the defined regex pattern.
-     *
-     * @return array An array of unique domain names found in localized scripts.
+     * @param array $array The array to which the domain will be added.
+     * @param string $url The URL from which to extract the domain.
      */
-    public function getDomainsFromLocalizedScripts(): array
-    {
-        $domains = [];
-        $scripts = wp_scripts()->registered ?? [];
-
-        foreach ($scripts as $script) {
-            // Check 'localize' data
-            if (!empty($script->extra['data'])) {
-
-                if($jsonDecoded = json_decode($script->extra['data'])) {
-                  $script->extra['data'] = $jsonDecoded;
-                }
-
-                preg_match_all(self::LINK_REGEX, $script->extra['data'], $matches);
-                if (!empty($matches[1])) {
-                    $domains = array_merge($domains, $matches[1]);
-                }
-            }
-
-            // Check directly localized data
-            if (!empty($script->localizations)) {
-                foreach ($script->localizations as $localization) {
-                    $json = wp_json_encode($localization);
-                    preg_match_all(self::LINK_REGEX, $json, $matches);
-                    if (!empty($matches[1])) {
-                        $domains = array_merge($domains, $matches[1]);
-                    }
-                }
+    private function addUniqueDomain(&$array, $url) {
+        if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL)) {
+            $host = parse_url($url, PHP_URL_HOST);
+            if ($host) {
+                $array[] = $host;
+                $array = array_unique($array);
             }
         }
-
-        return $domains;
-    }
-
-    /**
-     * Gets the wp-content domains for the current WordPress site.
-     *
-     * @return arrat An array of unique domain names for the wp-content directory.
-     */
-    public function getContentDomains() : array
-    {
-        $domains = $this->wpService->wpUploadDir();
-
-        $domains = array_reduce(
-            $domains,
-            function ($carry, $item) {
-                if (isset($item['baseurl'])) {
-                    $carry[] = parse_url($item['baseurl'])['host'] ?? null;
-                }
-                return $carry;
-            },
-            []
-        );
-
-        return array_filter($domains);
     }
 }
