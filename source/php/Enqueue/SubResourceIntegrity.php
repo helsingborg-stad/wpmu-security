@@ -7,6 +7,8 @@ use WPMUSecurity\Config;
 
 class SubResourceIntegrity
 {
+    private const VALID_EXTENSIONS = ['js', 'css'];
+
     public function __construct(private WpService $wpService, private Config $config){}
 
     /**
@@ -108,7 +110,9 @@ class SubResourceIntegrity
 
         $localPath = $this->createRelativePath($src);
 
-        if (is_null($localPath) || !file_exists($localPath)) {
+        if (is_null($localPath) || !file_exists($localPath) || !$this->isValidExtension($localPath)) {
+            // If the file does not exist or is not a PHP file, we cannot generate an SRI hash.
+            return null;
           return null;
         }
 
@@ -186,5 +190,17 @@ class SubResourceIntegrity
     private function normalizeProtocol(string $url): string
     {
         return str_replace(['http://', 'https://'], '', $url);
+    }
+
+    /**
+     * Checks if the file extension is valid for SRI.
+     *
+     * @param string $filePath The path to the file.
+     * @return bool True if the extension is valid, false otherwise.
+     */
+    private function isValidExtension(string $filePath) : bool
+    {
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        return in_array($extension, self::VALID_EXTENSIONS, true);
     }
 }
