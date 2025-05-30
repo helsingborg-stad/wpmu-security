@@ -4,3 +4,4 @@ vendor
 dist
 *.cache
 .phpunit.result.cache
+.phpunit.result.cache
