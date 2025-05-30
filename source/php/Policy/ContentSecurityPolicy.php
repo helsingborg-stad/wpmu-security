@@ -113,13 +113,12 @@ class ContentSecurityPolicy
             'connect-src' => [],
         ];
     
-        // script-src
-        // External scripts
+        // Scripts
         $scriptElements = $xpath->query('//script[@src]');
         foreach ($scriptElements as $script) {
             $this->addUniqueDomain($cspPolicies['script-src'], $script->getAttribute('src'));
         }
-        // Inline scripts are 'unsafe-inline' and don't have a source, but we can note their presence
+        // Check if unsafe-inline scripts are needed
         $inlineScriptElements = $xpath->query('//script[not(@src) and normalize-space(.) != ""]');
         if ($inlineScriptElements->length > 0) {
             if (!in_array("'unsafe-inline'", $cspPolicies['script-src'])) {
@@ -127,12 +126,12 @@ class ContentSecurityPolicy
             }
         }
     
-        // style-src
-        // External stylesheets
+        //Stylesheets
         $linkElements = $xpath->query('//link[@rel="stylesheet" and @href]');
         foreach ($linkElements as $link) {
             $this->addUniqueDomain($cspPolicies['style-src'], $link->getAttribute('href'));
         }
+
         // Inline styles
         $styleElements = $xpath->query('//style');
         if ($styleElements->length > 0) {
@@ -140,7 +139,8 @@ class ContentSecurityPolicy
                 $cspPolicies['style-src'][] = "'unsafe-inline'";
             }
         }
-        // Check for inline styles in style attributes (less common for CSP direct impact but good for completeness)
+
+        //Check if unsafe-inline styles are needed
         $allElementsWithStyleAttr = $xpath->query('//*[@style]');
         if ($allElementsWithStyleAttr->length > 0) {
              if (!in_array("'unsafe-inline'", $cspPolicies['style-src'])) {
@@ -148,12 +148,13 @@ class ContentSecurityPolicy
             }
         }
     
-        // img-src
+        // Images 
         $imgElements = $xpath->query('//img[@src]');
         foreach ($imgElements as $img) {
             $this->addUniqueDomain($cspPolicies['img-src'], $img->getAttribute('src'));
         }
-        // Picture source srcset
+
+        // Picture
         $pictureSourceElements = $xpath->query('//picture/source[@srcset]');
         foreach ($pictureSourceElements as $source) {
             // srcset can contain multiple URLs, but for CSP it's usually just the origin we care about
@@ -166,30 +167,19 @@ class ContentSecurityPolicy
             }
         }
     
-    
-        // media-src (video and audio)
+        //Video and audio sources
         $mediaSourceElements = $xpath->query('//video/source[@src] | //audio/source[@src]');
         foreach ($mediaSourceElements as $source) {
             $this->addUniqueDomain($cspPolicies['media-src'], $source->getAttribute('src'));
         }
-        $videoElements = $xpath->query('//video[@src]'); // Direct video src
-        foreach ($videoElements as $video) {
-            $this->addUniqueDomain($cspPolicies['media-src'], $video->getAttribute('src'));
-        }
-        $audioElements = $xpath->query('//audio[@src]'); // Direct audio src
-        foreach ($audioElements as $audio) {
-            $this->addUniqueDomain($cspPolicies['media-src'], $audio->getAttribute('src'));
-        }
     
-    
-        // frame-src
+        // Iframes
         $iframeElements = $xpath->query('//iframe[@src]');
         foreach ($iframeElements as $iframe) {
             $this->addUniqueDomain($cspPolicies['frame-src'], $iframe->getAttribute('src'));
         }
     
-    
-        // object-src
+        //Object and embed sources
         $objectElements = $xpath->query('//object[@data]');
         foreach ($objectElements as $object) {
             $this->addUniqueDomain($cspPolicies['object-src'], $object->getAttribute('data'));
@@ -199,15 +189,13 @@ class ContentSecurityPolicy
             $this->addUniqueDomain($cspPolicies['object-src'], $embed->getAttribute('src'));
         }
     
-    
-        // form-action
+        // Form actions
         $formElements = $xpath->query('//form[@action]');
         foreach ($formElements as $form) {
             $this->addUniqueDomain($cspPolicies['form-action'], $form->getAttribute('action'));
         }
     
-        // font-src
-        // For webfonts defined in inline styles, we need to parse the CSS
+        // Inline fonts in style attributes
         foreach ($styleElements as $style) {
             $inlineCss = $style->nodeValue;
             preg_match_all('/url\((["\']?)(.*?)\1\)\s*format\((["\']?)(.*?)\3\)/i', $inlineCss, $matches, PREG_SET_ORDER);
@@ -219,30 +207,19 @@ class ContentSecurityPolicy
             }
         }
     
-        // connect-src (for URLs found in data attributes that might imply a connection)
-        // data-link, data-json, data-serialized
-        $dataElements = $xpath->query('//*[@data-link | @data-json | @data-serialized]');
-        foreach ($dataElements as $element) {
-            if ($element->hasAttribute('data-link')) {
-                $this->addUniqueDomain($cspPolicies['connect-src'], $element->getAttribute('data-link'));
-            }
-            if ($element->hasAttribute('data-json')) {
-                $jsonData = json_decode($element->getAttribute('data-json'), true);
-                if (is_array($jsonData)) {
-                    foreach ($jsonData as $key => $value) {
-                        if (is_string($value)) {
-                            $this->addUniqueDomain($cspPolicies['connect-src'], $value);
-                        }
-                    }
-                }
-            }
-            if ($element->hasAttribute('data-serialized')) {
-                // Attempt to unserialize PHP data
-                $serializedData = @unserialize($element->getAttribute('data-serialized'));
-                if ($serializedData !== false && is_array($serializedData)) {
-                    foreach ($serializedData as $key => $value) {
-                        if (is_string($value)) {
-                            $this->addUniqueDomain($cspPolicies['connect-src'], $value);
+        foreach ($xpath->query('//*') as $element) {
+            if ($element->hasAttributes()) {
+                foreach ($element->attributes as $attr) {
+                    $value = $attr->value;
+                    if (filter_var($value, FILTER_VALIDATE_URL)) {
+                        $this->addUniqueDomain($cspPolicies['connect-src'], $value);
+                    } else {
+                        if (preg_match_all('/https?:\/\/[^\s"\'>]+/i', $value, $matches)) {
+                            foreach ($matches[0] as $url) {
+                                if (filter_var($url, FILTER_VALIDATE_URL)) {
+                                    $this->addUniqueDomain($cspPolicies['connect-src'], $url);
+                                }
+                            }
                         }
                     }
                 }
