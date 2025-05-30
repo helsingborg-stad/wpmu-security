@@ -114,6 +114,63 @@ class ContentSecurityPolicy
         return $domains;
     }
 
+
+    /**
+     * Extracts and categorizes domains from the provided HTML markup.
+     *
+     * This method categorizes domains into scripts, styles, images, and others
+     * based on their file extensions. 
+     *
+     * @param string $markup The HTML markup to search for domains.
+     * @return array An associative array with categorized domains.
+     */
+    public function getCategorizedDomainsFromMarkup($markup): array
+    {
+        $domains = [
+            'scripts' => [],
+            'styles' => [],
+            'images' => [],
+            'fonts' => [],
+            'others' => []
+        ];
+
+        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
+        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
+        if (isset($matches[1])) {
+            foreach ($matches[1] as $domain) {
+                $parsedUrl = parse_url($domain);
+                if (isset($parsedUrl['path'])) {
+                    $path = $parsedUrl['path'];
+                    $extension = pathinfo($path, PATHINFO_EXTENSION);
+                    switch ($extension) {
+                        case 'js':
+                            $domains['scripts'][] = $domain;
+                            break;
+                        case 'css':
+                            $domains['styles'][] = $domain;
+                            break;
+                        case 'jpg':
+                        case 'jpeg':
+                        case 'png':
+                        case 'gif':
+                        case 'webp':
+                            $domains['images'][] = $domain;
+                            break;
+                        case 'woff':
+                        case 'woff2':
+                        case 'ttf':
+                            $domains['fonts'][] = $domain;
+                            break;
+                        default:
+                            $domains['others'][] = $domain;
+                    }
+                }
+            }
+        }
+
+        return array_map('array_unique', $domains);
+    }
+
     /**
      * Extracts domains from localized scripts registered in WordPress.
      *
