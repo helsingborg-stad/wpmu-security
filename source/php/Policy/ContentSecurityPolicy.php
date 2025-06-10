@@ -26,7 +26,7 @@ class ContentSecurityPolicy
      */
     public function addHooks(): void
     {
-        $this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1);
+        //$this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1);
     }
 
     /**
