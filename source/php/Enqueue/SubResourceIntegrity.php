@@ -213,7 +213,8 @@ class SubResourceIntegrity
      */
     private function isValidExtension(string $filePath) : bool
     {
-        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
-        return in_array($extension, self::VALID_EXTENSIONS, true);
+        return in_array(
+            pathinfo($filePath, PATHINFO_EXTENSION) ?? null
+        , self::VALID_EXTENSIONS, true);
     }
 }
