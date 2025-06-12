@@ -1,0 +1,15 @@
+<?php 
+
+namespace WPMUSecurity\Policy\Resolver;
+
+use WPMUSecurity\Policy\DomWrapperInterface;
+
+class FormActionResolver implements DomainResolverInterface {
+    public function resolve(DomWrapperInterface $dom): array {
+        $domains = [];
+        foreach ($dom->query('//form[@action]') as $node) {
+            $domains[] = parse_url($node->getAttribute('action'), PHP_URL_HOST);
+        }
+        return array_values(array_filter(array_unique($domains)));
+    }
+}

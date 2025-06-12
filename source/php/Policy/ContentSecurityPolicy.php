@@ -6,6 +6,17 @@ use WP;
 use WpService\WpService;
 use DOMDocument;
 use DOMXPath;
+use WPMUSecurity\Policy\DomWrapper;
+use WPMUSecurity\Policy\Resolver\DomainResolverInterface;
+use WPMUSecurity\Policy\Resolver\ScriptSrcResolver;
+use WPMUSecurity\Policy\Resolver\StyleSrcResolver;
+use WPMUSecurity\Policy\Resolver\ImgSrcResolver;
+use WPMUSecurity\Policy\Resolver\MediaSrcResolver;
+use WPMUSecurity\Policy\Resolver\FrameSrcResolver;
+use WPMUSecurity\Policy\Resolver\ObjectSrcResolver;
+use WPMUSecurity\Policy\Resolver\FormActionResolver;
+use WPMUSecurity\Policy\Resolver\FontSrcResolver;
+use WPMUSecurity\Policy\Resolver\ConnectSrcResolver;
 
 /**
  * Class ContentSecurityPolicy
@@ -87,169 +98,35 @@ class ContentSecurityPolicy
     }
 
     /**
-     * Extracts and categorizes domains from the provided HTML markup.
+     * Extracts and categorizes domains from the provided HTML markup using resolvers.
      *
-     * This method categorizes domains into scripts, styles, images, and others
-     * based on their file extensions. 
-     *
-     * @param string $markup The HTML markup to search for domains.
+     * @param string $html The HTML markup to search for domains.
      * @return array An associative array with categorized domains.
      */
-    public function getCategorizedDomainsFromMarkup($html) {
+    public function getCategorizedDomainsFromMarkup($html): array {
         $dom = new DOMDocument();
         // Suppress warnings for malformed HTML
         @$dom->loadHTML($html);
-        $xpath = new DOMXPath($dom);
-    
-        $cspPolicies = [
-            'script-src' => [],
-            'style-src' => [],
-            'img-src' => [],
-            'media-src' => [],
-            'frame-src' => [],
-            'object-src' => [],
-            'form-action' => [],
-            'font-src' => [],
-            'connect-src' => [],
+        $wrapper = new DomWrapper($dom);
+
+        $resolvers = [
+            'script-src' => new ScriptSrcResolver(),
+            'style-src' => new StyleSrcResolver(),
+            'img-src' => new ImgSrcResolver(),
+            'media-src' => new MediaSrcResolver(),
+            'frame-src' => new FrameSrcResolver(),
+            'object-src' => new ObjectSrcResolver(),
+            'form-action' => new FormActionResolver(),
+            'font-src' => new FontSrcResolver(),
+            'connect-src' => new ConnectSrcResolver(),
         ];
-    
-        // Scripts
-        $scriptElements = $xpath->query('//script[@src]');
-        foreach ($scriptElements as $script) {
-            $this->addUniqueDomain($cspPolicies['script-src'], $script->getAttribute('src'));
-        }
-        // Check if unsafe-inline scripts are needed
-        $inlineScriptElements = $xpath->query('//script[not(@src) and normalize-space(.) != ""]');
-        if ($inlineScriptElements->length > 0) {
-            if (!in_array("'unsafe-inline'", $cspPolicies['script-src'])) {
-                $cspPolicies['script-src'][] = "'unsafe-inline'";
-            }
-        }
-    
-        //Stylesheets
-        $linkElements = $xpath->query('//link[@rel="stylesheet" and @href]');
-        foreach ($linkElements as $link) {
-            $this->addUniqueDomain($cspPolicies['style-src'], $link->getAttribute('href'));
+
+        $cspPolicies = [];
+        foreach ($resolvers as $policy => $resolver) {
+            $cspPolicies[$policy] = $resolver->resolve($wrapper) ?: ["'none'"];
+            sort($cspPolicies[$policy]);
         }
 
-        // Inline styles
-        $styleElements = $xpath->query('//style');
-        if ($styleElements->length > 0) {
-            if (!in_array("'unsafe-inline'", $cspPolicies['style-src'])) {
-                $cspPolicies['style-src'][] = "'unsafe-inline'";
-            }
-        }
-
-        //Check if unsafe-inline styles are needed
-        $allElementsWithStyleAttr = $xpath->query('//*[@style]');
-        if ($allElementsWithStyleAttr->length > 0) {
-             if (!in_array("'unsafe-inline'", $cspPolicies['style-src'])) {
-                $cspPolicies['style-src'][] = "'unsafe-inline'";
-            }
-        }
-    
-        // Images 
-        $imgElements = $xpath->query('//img[@src]');
-        foreach ($imgElements as $img) {
-            $this->addUniqueDomain($cspPolicies['img-src'], $img->getAttribute('src'));
-        }
-
-        // Picture
-        $pictureSourceElements = $xpath->query('//picture/source[@srcset]');
-        foreach ($pictureSourceElements as $source) {
-            // srcset can contain multiple URLs, but for CSP it's usually just the origin we care about
-            $srcset = $source->getAttribute('srcset');
-            // Basic parsing for single URL in srcset for demonstration
-            $urls = explode(',', $srcset);
-            foreach ($urls as $urlPart) {
-                $url = trim(explode(' ', $urlPart)[0]); // Get the URL before any descriptors
-                $this->addUniqueDomain($cspPolicies['img-src'], $url);
-            }
-        }
-    
-        //Video and audio sources
-        $mediaSourceElements = $xpath->query('//video/source[@src] | //audio/source[@src]');
-        foreach ($mediaSourceElements as $source) {
-            $this->addUniqueDomain($cspPolicies['media-src'], $source->getAttribute('src'));
-        }
-    
-        // Iframes
-        $iframeElements = $xpath->query('//iframe[@src]');
-        foreach ($iframeElements as $iframe) {
-            $this->addUniqueDomain($cspPolicies['frame-src'], $iframe->getAttribute('src'));
-        }
-    
-        //Object and embed sources
-        $objectElements = $xpath->query('//object[@data]');
-        foreach ($objectElements as $object) {
-            $this->addUniqueDomain($cspPolicies['object-src'], $object->getAttribute('data'));
-        }
-        $embedElements = $xpath->query('//embed[@src]');
-        foreach ($embedElements as $embed) {
-            $this->addUniqueDomain($cspPolicies['object-src'], $embed->getAttribute('src'));
-        }
-    
-        // Form actions
-        $formElements = $xpath->query('//form[@action]');
-        foreach ($formElements as $form) {
-            $this->addUniqueDomain($cspPolicies['form-action'], $form->getAttribute('action'));
-        }
-    
-        // Inline fonts in style attributes
-        foreach ($styleElements as $style) {
-            $inlineCss = $style->nodeValue;
-            preg_match_all('/url\((["\']?)(.*?)\1\)\s*format\((["\']?)(.*?)\3\)/i', $inlineCss, $matches, PREG_SET_ORDER);
-            foreach ($matches as $match) {
-                // Check if it's a font format
-                if (preg_match('/woff|ttf|otf|eot|svg|font/', $match[4])) {
-                    $this->addUniqueDomain($cspPolicies['font-src'], $match[2]);
-                }
-            }
-        }
-    
-        foreach ($xpath->query('//*') as $element) {
-            if ($element->hasAttributes()) {
-                foreach ($element->attributes as $attr) {
-                    $value = $attr->value;
-                    if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        $this->addUniqueDomain($cspPolicies['connect-src'], $value);
-                    } else {
-                        if (preg_match_all('/https?:\/\/[^\s"\'>]+/i', $value, $matches)) {
-                            foreach ($matches[0] as $url) {
-                                if (filter_var($url, FILTER_VALIDATE_URL)) {
-                                    $this->addUniqueDomain($cspPolicies['connect-src'], $url);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    
-        // Filter out empty arrays and sort URLs
-        foreach ($cspPolicies as $policy => &$urls) {
-            sort($urls);
-            if (empty($urls)) {
-                $cspPolicies[$policy] = ["'none'"];
-            }
-        }
-        
         return $cspPolicies;
-    }
-
-    /**
-     * Adds a unique domain to the provided array if it is a valid URL.
-     *
-     * @param array $array The array to which the domain will be added.
-     * @param string $url The URL from which to extract the domain.
-     */
-    private function addUniqueDomain(&$array, $url) {
-        if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL)) {
-            $host = parse_url($url, PHP_URL_HOST);
-            if ($host) {
-                $array[] = $host;
-                $array = array_unique($array);
-            }
-        }
     }
 }
