@@ -3,8 +3,11 @@
 namespace WPMUSecurity\Policy\Resolver;
 
 use WPMUSecurity\Policy\DomWrapperInterface;
+use WPMUSecurity\Policy\UrlInterface;
 
 class ConnectSrcResolver implements DomainResolverInterface {
+
+  public function __construct(private UrlInterface $urlHelper) {}
 
   public function resolve(DomWrapperInterface $dom): array {
       $domains = [];
@@ -15,7 +18,7 @@ class ConnectSrcResolver implements DomainResolverInterface {
           }
 
           // Normalize the value to handle escaped slashes
-          $value = str_replace('\\/', '/', $attr->value);
+          $value = $this->urlHelper->normalize($attr->value);
 
           //Regex match for URLs
           if (preg_match_all('/https?:\/\/[^\s"\'>]+/i', $value, $matches)) {

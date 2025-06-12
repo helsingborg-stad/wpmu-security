@@ -3,8 +3,12 @@
 namespace WPMUSecurity\Policy\Resolver;
 
 use WPMUSecurity\Policy\DomWrapperInterface;
+use WPMUSecurity\Policy\UrlInterface;
 
 class ObjectSrcResolver implements DomainResolverInterface {
+
+    public function __construct(private UrlInterface $urlHelper) {}
+
     public function resolve(DomWrapperInterface $dom): array {
         $domains = [];
         foreach ($dom->query('//object[@data] | //embed[@src]') as $node) {

@@ -108,17 +108,18 @@ class ContentSecurityPolicy
         // Suppress warnings for malformed HTML
         @$dom->loadHTML($html);
         $wrapper = new DomWrapper($dom);
+        $urlHelper = new \WPMUSecurity\Policy\Url();
 
         $resolvers = [
-            'script-src' => new ScriptSrcResolver(),
-            'style-src' => new StyleSrcResolver(),
-            'img-src' => new ImgSrcResolver(),
-            'media-src' => new MediaSrcResolver(),
-            'frame-src' => new FrameSrcResolver(),
-            'object-src' => new ObjectSrcResolver(),
-            'form-action' => new FormActionResolver(),
-            'font-src' => new FontSrcResolver(),
-            'connect-src' => new ConnectSrcResolver(),
+            'script-src' => new ScriptSrcResolver($urlHelper),
+            'style-src' => new StyleSrcResolver($urlHelper),
+            'img-src' => new ImgSrcResolver($urlHelper),
+            'media-src' => new MediaSrcResolver($urlHelper),
+            'frame-src' => new FrameSrcResolver($urlHelper),
+            'object-src' => new ObjectSrcResolver($urlHelper),
+            'form-action' => new FormActionResolver($urlHelper),
+            'font-src' => new FontSrcResolver($urlHelper),
+            'connect-src' => new ConnectSrcResolver($urlHelper),
         ];
 
         $cspPolicies = [];

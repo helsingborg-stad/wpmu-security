@@ -3,8 +3,12 @@
 namespace WPMUSecurity\Policy\Resolver;
 
 use WPMUSecurity\Policy\DomWrapperInterface;
+use WPMUSecurity\Policy\UrlInterface;
 
 class FrameSrcResolver implements DomainResolverInterface {
+
+    public function __construct(private UrlInterface $urlHelper) {}
+
     public function resolve(DomWrapperInterface $dom): array {
         $domains = [];
         foreach ($dom->query('//iframe[@src]') as $node) {
