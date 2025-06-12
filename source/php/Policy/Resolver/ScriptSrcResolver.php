@@ -8,6 +8,9 @@ class ScriptSrcResolver implements DomainResolverInterface {
     public function resolve(DomWrapperInterface $dom): array {
         $domains = [];
         foreach ($dom->query('//script[@src]') as $node) {
+            if (!$node instanceof \DOMElement) {
+                continue;
+            }
             $domains[] = parse_url($node->getAttribute('src'), PHP_URL_HOST);
         }
         if ($dom->query('//script[not(@src) and normalize-space(.) != ""]')->length > 0) {

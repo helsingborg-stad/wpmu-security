@@ -7,7 +7,7 @@ use WpService\WpService;
 use DOMDocument;
 use DOMXPath;
 use WPMUSecurity\Policy\DomWrapper;
-use WPMUSecurity\Policy\Resolver\DomainResolverInterface;
+use WPMUSecurity\Policy\DomWrapperInterface;
 use WPMUSecurity\Policy\Resolver\ScriptSrcResolver;
 use WPMUSecurity\Policy\Resolver\StyleSrcResolver;
 use WPMUSecurity\Policy\Resolver\ImgSrcResolver;
