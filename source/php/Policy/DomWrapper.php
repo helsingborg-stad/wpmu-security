@@ -29,7 +29,7 @@ class DomWrapper implements DomWrapperInterface {
         foreach ($this->xpath->query('//*') as $element) {
             if ($element->hasAttributes()) {
                 foreach ($element->attributes as $attr) {
-                    $attributes[] = $attr->value;
+                    $attributes[] = $attr; // DOMAttr object
                 }
             }
         }
