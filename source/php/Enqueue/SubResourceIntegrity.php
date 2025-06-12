@@ -8,6 +8,7 @@ use WPMUSecurity\Config;
 class SubResourceIntegrity
 {
     private const VALID_EXTENSIONS = ['js', 'css'];
+    private const BLOCKED_HANDLES = ['wp-block-library', 'react-js', 'react-dom-js']; 
 
     public function __construct(private WpService $wpService, private Config $config){}
 
@@ -32,6 +33,10 @@ class SubResourceIntegrity
      */
     public function addSriToScript(string $tag, string $handle, string $src): string
     {
+        if (in_array($handle, self::BLOCKED_HANDLES, true)) {
+            return $tag; // Skip adding SRI for blocked handles, not possible to create sri that stays valid.
+        }
+
         if($this->wpService->isAdmin()) {
             return $tag;
         }
@@ -53,6 +58,10 @@ class SubResourceIntegrity
      */
     public function addSriToStyle(string $tag, string $handle, string $href, ?string $media = null): string
     {
+        if (in_array($handle, self::BLOCKED_HANDLES, true)) {
+            return $tag; // Skip adding SRI for blocked handles, not possible to create sri that stays valid.
+        }
+
         if($this->wpService->isAdmin()) {
             return $tag;
         }
@@ -117,8 +126,6 @@ class SubResourceIntegrity
         $localPath = $this->createRelativePath($src);
 
         if (is_null($localPath) || !file_exists($localPath) || !$this->isValidExtension($localPath)) {
-            // If the file does not exist or is not a PHP file, we cannot generate an SRI hash.
-            return null;
           return null;
         }
 
