@@ -76,20 +76,24 @@ class ContentSecurityPolicy
      * @param array $cspPolicies The categorized CSP policies with their respective URLs.
      * @return string The constructed categorized CSP header string.
      */
-    private function createCategorizedCspHeader(array $cspPolicies): string
+    public function createCategorizedCspHeader(array $cspPolicies): string
     {
         $csp = '';
-        foreach ($cspPolicies as $policy => $urls) {
-            if (!empty($urls)) {
-                $csp .= "$policy 'self' " . implode(' ', $urls) . "; ";
+        foreach ($cspPolicies as $policy => $domains) {
+            if (!empty($domains)) {
+
+                $implodedDomains = array_map(function ($domain) {
+                    return trim($domain);
+                }, $domains);
+                $implodedDomains = implode(' ', $implodedDomains);
+
+                $csp .= "$policy " . $implodedDomains . "; ";
             }
         }
 
         $csp .= " base-uri 'self';";
-        $csp .= " form-action 'self';";
         $csp .= " upgrade-insecure-requests;";
         $csp .= " block-all-mixed-content;";
-        $csp .= " require-trusted-types-for 'script';";
 
         return rtrim($csp, '; ');
     }

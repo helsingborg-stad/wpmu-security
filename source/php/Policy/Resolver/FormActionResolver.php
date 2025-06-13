@@ -16,6 +16,7 @@ class FormActionResolver implements DomainResolverInterface {
                 $domains[] = parse_url($node->getAttribute('action'), PHP_URL_HOST);
             }
         }
+        $domains[] = "'self'";
         return array_values(array_filter(array_unique($domains)));
     }
 }

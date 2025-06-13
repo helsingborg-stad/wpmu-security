@@ -53,7 +53,7 @@ class ContentSecurityPolicyTest extends TestCase {
     }
 
     /**
-     * @testdox Test dataset table:
+     * @testdox Test dataset result table:
      */
     public function testThatWeCanPrintATableOfDomains()
     {
@@ -65,7 +65,6 @@ class ContentSecurityPolicyTest extends TestCase {
         $this->printPolicyTable($result);
         $this->assertIsArray($result);
     }
-
 
     /**
      * Provides a list of domains that are expected to be found in the HTML document.
@@ -112,7 +111,8 @@ class ContentSecurityPolicyTest extends TestCase {
           ['data6.test'],
           ['fonts1.test'],
           ['fonts2.test'],
-          ['datatag.subdomain.domain.se']
+          ['imageindatatag.subdomain.domain.se'],
+          ['stats.matomo.com']
       ];
   }
 
