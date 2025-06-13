@@ -19,33 +19,39 @@
   <script src="https://js1.test/script.js"></script>
   <script src="https://js2.test/script.js"></script>
   <script src="https://js1.test/script.js"></script> <!-- duplicate -->
+
+  <!-- Wordpress data tag -->
+  <script id="broken-link-context-detection-js-extra">var brokenLinkContextDetectionData = {"isEnabled":"1","checkUrl":"https:\/\/imageindatatag.subdomain.domain.se\\/resources\/images\/dom\/busy-icon-5.gif","checkTimeout":"3000","domains":["google.com"],"successClass":"context-check-avabile","failedClass":"context-check-unavailable","isToolTipActive":"","tooltip":"Link unavailable","isModalActive":"1"};</script> 
+
+  <!-- Matomo embed -->
+  <script>var _paq = window._paq = window._paq || []; _paq.push(['trackPageView']); _paq.push(['enableLinkTracking']); (function() { var u="https://stats.matomo.com/"; _paq.push(['setTrackerUrl', u+'matomo.php']); _paq.push(['setSiteId', '250']); var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0]; g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s); })();</script><!-- End Matomo Code -->
 </head>
 <body>
   <h1>CSP Test Elements</h1>
 
   <!-- Images -->
-  <img src="https://img1.test/image.png" alt="img1.test" data-link="https://img1.test/image.png">
-  <img src="https://img2.test/image.png" alt="img2.test" data-json='{"src":"https://img2.test/image.png"}'>
+  <img src="https://img1.test/image.png" alt="img1.test" data-link="https://attribute.img1.test/image.png">
+  <img src="https://img2.test/image.png" alt="img2.test" data-json='{"src":"https://attribute.img2.test/image.png"}'>
   <img src="https://img1.test/image.png" alt="img1.test duplicate">
 
   <!-- Iframes -->
   <iframe src="https://iframe1.test" title="iframe1.test"></iframe>
-  <iframe src="https://iframe2.test" title="iframe2.test" data-link="https://iframe2.test"></iframe>
+  <iframe src="https://iframe2.test" title="iframe2.test" data-link="https://attribute.iframe2.test"></iframe>
   <iframe src="https://iframe1.test" title="iframe1.test duplicate"></iframe>
 
   <!-- Objects -->
   <object data="https://object1.test/file.swf" type="application/x-shockwave-flash"></object>
-  <object data="https://object2.test/file.swf" type="application/x-shockwave-flash" data-json='{"data":"https://object2.test/file.swf"}'></object>
+  <object data="https://object2.test/file.swf" type="application/x-shockwave-flash" data-json='{"data":"https://attribute.object2.test/file.swf"}'></object>
   <object data="https://object1.test/file.swf" type="application/x-shockwave-flash"></object>
 
   <!-- Embeds -->
   <embed src="https://embed1.test/file.mp4" type="video/mp4">
-  <embed src="https://embed2.test/file.mp4" type="video/mp4" data-link="https://embed2.test/file.mp4">
+  <embed src="https://embed2.test/file.mp4" type="video/mp4" data-link="https://attribute.embed2.test/file.mp4">
   <embed src="https://embed1.test/file.mp4" type="video/mp4">
 
   <!-- Video -->
   <video controls>
-    <source src="https://video1.test/video.mp4" type="video/mp4" data-link="https://video1.test/video.mp4">
+    <source src="https://video1.test/video.mp4" type="video/mp4" data-link="https://attribute.video1.test/video.mp4">
     <source src="https://video2.test/video.mp4" type="video/mp4">
     <source src="https://video1.test/video.mp4" type="video/mp4">
   </video>
@@ -53,7 +59,7 @@
   <!-- Audio -->
   <audio controls>
     <source src="https://audio1.test/audio.mp3" type="audio/mp3">
-    <source src="https://audio2.test/audio.mp3" type="audio/mp3" data-json='{"src":"https://audio2.test/audio.mp3"}'>
+    <source src="https://audio2.test/audio.mp3" type="audio/mp3" data-json='{"src":"https://attribute.audio2.test/audio.mp3"}'>
     <source src="https://audio1.test/audio.mp3" type="audio/mp3">
   </audio>
 
@@ -61,11 +67,11 @@
   <picture>
     <source srcset="https://picture1.test/img.webp" type="image/webp">
     <source srcset="https://picture2.test/img.webp" type="image/webp" data-link="https://picture2.test/img.webp">
-    <img src="https://picture1.test/img.png" alt="picture1.test">
+    <img src="https://picture3.test/img.png" alt="picture1.test">
   </picture>
 
   <!-- Form (action) -->
-  <form action="https://form1.test/submit" method="post" data-link="https://form1.test/submit">
+  <form action="https://form1.test/submit" method="post" data-link="https://attribute.form1.test/submit">
     <input type="text" name="test1">
     <button type="submit">Submit to form1.test</button>
   </form>
@@ -77,7 +83,7 @@
 
   <!-- A links (should not be blocked by CSP) -->
   <a href="https://alink1.test/page.html">alink1.test</a>
-  <a href="https://alink2.test/page.html" data-json='{"href":"https://alink2.test/page.html"}'>alink2.test</a>
+  <a href="https://alink2.test/page.html" data-json='{"href":"https://attribute.alink2.test/page.html"}'>alink2.test</a>
   <a href="https://alink1.test/page.html">alink1.test duplicate</a>
 
   <!-- JSON encoded data -->
@@ -88,9 +94,39 @@
       "object": "https://object2.test/file.swf"
     }
   </script>
-  
+   
   <!-- Arbitrary data attributes -->
   <div data-link="https://data1.test" data-json='{"link":"https:\/\/data2.test"}' data-serialized='a:1:{s:4:"link";s:19:"https:\/\/data3.test";}'>Data Test 1</div>
-  <div data-link="https://data4.test" data-json='{"link":"https:\/\/data5.test"}' data-serialized='a:1:{s:4:"link";s:19:"https:\/\/data6.test";}'>Data Test 2</div>
+  <div data-link="https://data4.test" data-serialized='a:1:{s:4:"link";s:19:"https:\/\/data6.test";}' data-json='{"link":"https:\/\/data5.test"}'>Data Test 2</div>
+
+  <!-- Inline CSS Webfonts -->
+  <style>
+    @font-face {
+      font-family: 'TestFont';
+      src: url('https://fonts1.test/font.woff2') format('woff2');
+    }
+    body {
+      font-family: 'TestFont', sans-serif;
+    }
+  </style>
+  <style>
+    @font-face {
+      font-family: 'TestFont2';
+      src: url('https://fonts2.test/font2.woff2') format('woff2');
+    }
+    body {
+      font-family: 'TestFont', sans-serif;
+    }
+  </style>
+  <style>
+    @font-face {
+      font-family: 'TestFont3';
+      src: url('https://fonts2.test/font3.woff2') format('woff2');
+    }
+    body {
+      font-family: 'TestFont', sans-serif;
+    }
+  </style>
+
 </body>
 </html>

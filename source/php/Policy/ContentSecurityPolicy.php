@@ -2,8 +2,18 @@
 
 namespace WPMUSecurity\Policy;
 
-use WP;
 use WpService\WpService;
+use DOMDocument;
+use WPMUSecurity\Policy\DomWrapper;
+use WPMUSecurity\Policy\Resolver\ScriptSrcResolver;
+use WPMUSecurity\Policy\Resolver\StyleSrcResolver;
+use WPMUSecurity\Policy\Resolver\ImgSrcResolver;
+use WPMUSecurity\Policy\Resolver\MediaSrcResolver;
+use WPMUSecurity\Policy\Resolver\FrameSrcResolver;
+use WPMUSecurity\Policy\Resolver\ObjectSrcResolver;
+use WPMUSecurity\Policy\Resolver\FormActionResolver;
+use WPMUSecurity\Policy\Resolver\FontSrcResolver;
+use WPMUSecurity\Policy\Resolver\ConnectSrcResolver;
 
 /**
  * Class ContentSecurityPolicy
@@ -33,26 +43,12 @@ class ContentSecurityPolicy
      * Reads the markup and extracts domains to create a CSP header.
      *
      * @param string $markup The HTML markup to process.
-     * @return string The original markup with CSP headers sent.
      */
-    public function read($markup): string
+    public function read($markup): void
     {
-        $domains = $this->getDomainsFromMarkup($markup);
-        $domains = array_merge(
-            $domains,
-            $this->getDomainsFromLocalizedScripts(),
-            $this->getContentDomains()
-        );
-
-        $domains = array_unique($domains);
-        $domains = array_filter($domains);
-
-        if (!empty($domains)) {
-          $this->sendCspHeaders(
-            $this->createCspHeader($domains)
-          );
-        }
-        return $markup;
+        $cspPolicies    = $this->getCategorizedDomainsFromMarkup($markup);
+        $cspHeader      = $this->createCategorizedCspHeader($cspPolicies);
+        $this->sendCspHeaders($cspHeader);
     }
 
     /**
@@ -74,168 +70,63 @@ class ContentSecurityPolicy
     }
 
     /**
-     * Creates a Content Security Policy header string from the provided domains.
+     * Creates a categorized Content Security Policy header string from the provided policies.
      *
-     * @param array $domains The list of domains to include in the CSP header.
-     * @return string The constructed CSP header string.
+     * @param array $cspPolicies The categorized CSP policies with their respective URLs.
+     * @return string The constructed categorized CSP header string.
      */
-    private function createCspHeader(array $domains): string
+    public function createCategorizedCspHeader(array $cspPolicies): string
     {
-        $csp = "default-src 'self';";
-        if (!empty($domains)) {
-            $csp .= " script-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " style-src 'self' 'unsafe-inline' " . implode(' ', $domains) . ";";
-            $csp .= " img-src 'self' data: " . implode(' ', $domains) . ";";
-            $csp .= " connect-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " font-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " frame-ancestors 'self' " . implode(' ', $domains) . ";";
-            $csp .= " object-src 'self' " . implode(' ', $domains) . ";";
-            $csp .= " base-uri 'self';";
-            $csp .= " form-action 'self';";
-            $csp .= " upgrade-insecure-requests;";
-            $csp .= " block-all-mixed-content;";
+        $csp = '';
+        foreach ($cspPolicies as $policy => $domains) {
+            if (!empty($domains)) {
+
+                $implodedDomains = array_map(function ($domain) {
+                    return trim($domain);
+                }, $domains);
+                $implodedDomains = implode(' ', $implodedDomains);
+
+                $csp .= "$policy " . $implodedDomains . "; ";
+            }
         }
-        return $csp;
+
+        $csp .= " base-uri 'self';";
+        $csp .= " upgrade-insecure-requests;";
+        $csp .= " block-all-mixed-content;";
+
+        return rtrim($csp, '; ');
     }
 
     /**
-     * Extracts unique domains from the provided HTML markup.
+     * Extracts and categorizes domains from the provided HTML markup using resolvers.
      *
-     * @param string $markup The HTML markup to search for domains.
-     * @return array An array of unique domain names found in the markup.
-     */
-    public function getDomainsFromMarkup($markup): array
-    {
-        // Remove all anchor elements to ignore their href values
-        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
-
-        $domains = [];
-        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
-        if (isset($matches[1])) {
-            $domains = array_unique($matches[1]);
-        }
-        return $domains;
-    }
-
-
-    /**
-     * Extracts and categorizes domains from the provided HTML markup.
-     *
-     * This method categorizes domains into scripts, styles, images, and others
-     * based on their file extensions. 
-     *
-     * @param string $markup The HTML markup to search for domains.
+     * @param string $html The HTML markup to search for domains.
      * @return array An associative array with categorized domains.
      */
-    public function getCategorizedDomainsFromMarkup($markup): array
-    {
-        $domains = [
-            'scripts' => [],
-            'styles' => [],
-            'images' => [],
-            'fonts' => [],
-            'others' => []
+    public function getCategorizedDomainsFromMarkup($html): array {
+        $dom = new DOMDocument();
+
+        @$dom->loadHTML($html);
+        $wrapper = new DomWrapper($dom);
+        $urlHelper = new \WPMUSecurity\Policy\Url();
+
+        $resolvers = [
+            'script-src'    => new ScriptSrcResolver($urlHelper),
+            'style-src'     => new StyleSrcResolver($urlHelper),
+            'img-src'       => new ImgSrcResolver($urlHelper),
+            'media-src'     => new MediaSrcResolver($urlHelper),
+            'frame-src'     => new FrameSrcResolver($urlHelper),
+            'object-src'    => new ObjectSrcResolver($urlHelper),
+            'form-action'   => new FormActionResolver($urlHelper),
+            'font-src'      => new FontSrcResolver($urlHelper),
+            'connect-src'   => new ConnectSrcResolver($urlHelper),
         ];
 
-        $markupWithoutAnchors = preg_replace('/<a\b[^>]*>.*?<\/a>/is', '', $markup);
-        preg_match_all(self::LINK_REGEX, $markupWithoutAnchors, $matches);
-        if (isset($matches[1])) {
-            foreach ($matches[1] as $domain) {
-                $parsedUrl = parse_url($domain);
-                if (isset($parsedUrl['path'])) {
-                    $path = $parsedUrl['path'];
-                    $extension = pathinfo($path, PATHINFO_EXTENSION);
-                    switch ($extension) {
-                        case 'js':
-                            $domains['scripts'][] = $domain;
-                            break;
-                        case 'css':
-                            $domains['styles'][] = $domain;
-                            break;
-                        case 'jpg':
-                        case 'jpeg':
-                        case 'png':
-                        case 'gif':
-                        case 'webp':
-                            $domains['images'][] = $domain;
-                            break;
-                        case 'woff':
-                        case 'woff2':
-                        case 'ttf':
-                            $domains['fonts'][] = $domain;
-                            break;
-                        default:
-                            $domains['others'][] = $domain;
-                    }
-                }
-            }
+        $cspPolicies = [];
+        foreach ($resolvers as $policy => $resolver) {
+            $resolvedValue          = $resolver->resolve($wrapper);
+            $cspPolicies[$policy]   = empty($resolvedValue) ? ["'none'"] : $resolvedValue;
         }
-
-        return array_map('array_unique', $domains);
-    }
-
-    /**
-     * Extracts domains from localized scripts registered in WordPress.
-     *
-     * This method checks both the 'extra' data of scripts and their localizations
-     * to find any URLs that match the defined regex pattern.
-     *
-     * @return array An array of unique domain names found in localized scripts.
-     */
-    public function getDomainsFromLocalizedScripts(): array
-    {
-        $domains = [];
-        $scripts = wp_scripts()->registered ?? [];
-
-        foreach ($scripts as $script) {
-            // Check 'localize' data
-            if (!empty($script->extra['data'])) {
-
-                if($jsonDecoded = json_decode($script->extra['data'])) {
-                  $script->extra['data'] = $jsonDecoded;
-                }
-
-                preg_match_all(self::LINK_REGEX, $script->extra['data'], $matches);
-                if (!empty($matches[1])) {
-                    $domains = array_merge($domains, $matches[1]);
-                }
-            }
-
-            // Check directly localized data
-            if (!empty($script->localizations)) {
-                foreach ($script->localizations as $localization) {
-                    $json = wp_json_encode($localization);
-                    preg_match_all(self::LINK_REGEX, $json, $matches);
-                    if (!empty($matches[1])) {
-                        $domains = array_merge($domains, $matches[1]);
-                    }
-                }
-            }
-        }
-
-        return $domains;
-    }
-
-    /**
-     * Gets the wp-content domains for the current WordPress site.
-     *
-     * @return arrat An array of unique domain names for the wp-content directory.
-     */
-    public function getContentDomains() : array
-    {
-        $domains = $this->wpService->wpUploadDir();
-
-        $domains = array_reduce(
-            $domains,
-            function ($carry, $item) {
-                if (isset($item['baseurl'])) {
-                    $carry[] = parse_url($item['baseurl'])['host'] ?? null;
-                }
-                return $carry;
-            },
-            []
-        );
-
-        return array_filter($domains);
+        return $cspPolicies;
     }
 }
