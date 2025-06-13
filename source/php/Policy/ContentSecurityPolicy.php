@@ -2,12 +2,9 @@
 
 namespace WPMUSecurity\Policy;
 
-use WP;
 use WpService\WpService;
 use DOMDocument;
-use DOMXPath;
 use WPMUSecurity\Policy\DomWrapper;
-use WPMUSecurity\Policy\DomWrapperInterface;
 use WPMUSecurity\Policy\Resolver\ScriptSrcResolver;
 use WPMUSecurity\Policy\Resolver\StyleSrcResolver;
 use WPMUSecurity\Policy\Resolver\ImgSrcResolver;
@@ -105,29 +102,29 @@ class ContentSecurityPolicy
      */
     public function getCategorizedDomainsFromMarkup($html): array {
         $dom = new DOMDocument();
-        // Suppress warnings for malformed HTML
+
         @$dom->loadHTML($html);
         $wrapper = new DomWrapper($dom);
         $urlHelper = new \WPMUSecurity\Policy\Url();
 
         $resolvers = [
-            'script-src' => new ScriptSrcResolver($urlHelper),
-            'style-src' => new StyleSrcResolver($urlHelper),
-            'img-src' => new ImgSrcResolver($urlHelper),
-            'media-src' => new MediaSrcResolver($urlHelper),
-            'frame-src' => new FrameSrcResolver($urlHelper),
-            'object-src' => new ObjectSrcResolver($urlHelper),
-            'form-action' => new FormActionResolver($urlHelper),
-            'font-src' => new FontSrcResolver($urlHelper),
-            'connect-src' => new ConnectSrcResolver($urlHelper),
+            'script-src'    => new ScriptSrcResolver($urlHelper),
+            'style-src'     => new StyleSrcResolver($urlHelper),
+            'img-src'       => new ImgSrcResolver($urlHelper),
+            'media-src'     => new MediaSrcResolver($urlHelper),
+            'frame-src'     => new FrameSrcResolver($urlHelper),
+            'object-src'    => new ObjectSrcResolver($urlHelper),
+            'form-action'   => new FormActionResolver($urlHelper),
+            'font-src'      => new FontSrcResolver($urlHelper),
+            'connect-src'   => new ConnectSrcResolver($urlHelper),
         ];
 
         $cspPolicies = [];
         foreach ($resolvers as $policy => $resolver) {
-            $cspPolicies[$policy] = $resolver->resolve($wrapper) ?: ["'none'"];
-            sort($cspPolicies[$policy]);
+            $resolvedValue          = $resolver->resolve($wrapper);
+            $cspPolicies[$policy]   = empty($resolvedValue) ? ["'none'"] : $resolvedValue;
         }
-
+        sort($cspPolicies[$policy]);
         return $cspPolicies;
     }
 }

@@ -7,9 +7,27 @@ use WPMUSecurity\Policy\UrlInterface;
 
 class ImgSrcResolver implements DomainResolverInterface {
 
+    private const IMG_SUFFIXES = [
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg',
+        'bmp', 'ico', 'tiff', 'tif', 'heic', 'heif'
+    ];
+
     public function __construct(private UrlInterface $urlHelper) {}
 
     public function resolve(DomWrapperInterface $dom): array {
+        $images = $this->getImagesFromTags($dom);
+        $inlineImages = $this->getImagesFromInlineScripts($dom);
+        $domains = array_merge($images, $inlineImages);
+        return array_values(array_filter(array_unique($domains)));
+    }
+
+    /**
+     * Extracts image domains from <img> and <picture> tags.
+     *
+     * @param DomWrapperInterface $dom
+     * @return array
+     */
+    public function getImagesFromTags($dom): array {
         $domains = [];
         foreach ($dom->query('//img[@src]') as $node) {
             if (!$node instanceof \DOMElement) {
@@ -25,9 +43,45 @@ class ImgSrcResolver implements DomainResolverInterface {
             $urls = explode(',', $source->getAttribute('srcset'));
             foreach ($urls as $urlPart) {
                 $url = trim(explode(' ', $urlPart)[0]);
-                $domains[] = parse_url($url, PHP_URL_HOST);
+                if (preg_match('/\.(?:' . implode('|', self::IMG_SUFFIXES) . ')$/i', $url)) {
+                    $url = $this->urlHelper->normalize($url);
+                    $domains[] = parse_url($url, PHP_URL_HOST);
+                }
             }
         }
         return array_values(array_filter(array_unique($domains)));
     }
+
+  /**
+   * Extracts image from <script> URLS HERE </script> tags, including inline scripts.
+   *
+   * @param DomWrapperInterface $dom
+   * @return array
+   */
+  private function getImagesFromInlineScripts($dom) {
+      $domains = [];
+
+      foreach ($dom->query('//script') as $node) {
+          if (!$node instanceof \DOMElement) {
+              continue;
+          }
+
+          if (!$node->hasAttribute('src') && trim($node->textContent) !== '') {
+              if (preg_match_all('/https?:\\\\*\/\\\\*\/[a-zA-Z0-9\-._~:\/?#\[\]@!$&\'()*+,;=%\\\\]+/i', $node->textContent, $matches)) {
+                  foreach ($matches[0] as $url) {
+                      if (!preg_match('/\.(?:' . implode('|', self::IMG_SUFFIXES) . ')$/i', $url)) {
+                          continue;
+                      }
+                      $domains[] = parse_url(
+                          $this->urlHelper->normalize($url), 
+                          PHP_URL_HOST
+                      );
+                  }
+              }
+          }
+
+      }
+
+      return array_values(array_filter(array_unique($domains)));
+  }
 }

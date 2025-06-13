@@ -10,6 +10,9 @@ class Url implements UrlInterface
   public function normalize(string $url): ?string
   {
     $url = str_replace('\\/', '/', $url);
+    $url = rtrim($url, '/');
+    $url = strtolower($url);
+    $url = str_replace('\\', '', $url);
     if (strpos($url, '//') === 0) {
         $url = 'https:' . $url;
     }
