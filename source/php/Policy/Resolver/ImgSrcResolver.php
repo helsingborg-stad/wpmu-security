@@ -18,6 +18,7 @@ class ImgSrcResolver implements DomainResolverInterface {
         $images = $this->getImagesFromTags($dom);
         $inlineImages = $this->getImagesFromInlineScripts($dom);
         $domains = array_merge($images, $inlineImages);
+        $domains[] = "data:";
         return array_values(array_filter(array_unique($domains)));
     }
 
@@ -49,6 +50,7 @@ class ImgSrcResolver implements DomainResolverInterface {
                 }
             }
         }
+
         return array_values(array_filter(array_unique($domains)));
     }
 

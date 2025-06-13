@@ -43,7 +43,6 @@ class ContentSecurityPolicy
      * Reads the markup and extracts domains to create a CSP header.
      *
      * @param string $markup The HTML markup to process.
-     * @return string The original markup with CSP headers sent.
      */
     public function read($markup): void
     {
@@ -128,7 +127,6 @@ class ContentSecurityPolicy
             $resolvedValue          = $resolver->resolve($wrapper);
             $cspPolicies[$policy]   = empty($resolvedValue) ? ["'none'"] : $resolvedValue;
         }
-        sort($cspPolicies[$policy]);
         return $cspPolicies;
     }
 }
