@@ -53,6 +53,21 @@ class ContentSecurityPolicyTest extends TestCase {
     }
 
     /**
+     * @testdox Test dataset table:
+     */
+    public function testThatWeCanPrintATableOfDomains()
+    {
+        $testDocument           = $this->testHTMLDocumentProvider();
+        $contentSecurityPolicy  = new ContentSecurityPolicy(
+          new FakeWpService()
+        );
+        $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
+        $this->printPolicyTable($result);
+        $this->assertIsArray($result);
+    }
+
+
+    /**
      * Provides a list of domains that are expected to be found in the HTML document.
      * 
      * @return array An array of arrays, each containing a domain string.
@@ -96,7 +111,8 @@ class ContentSecurityPolicyTest extends TestCase {
           ['data5.test'],
           ['data6.test'],
           ['fonts1.test'],
-          ['fonts2.test']
+          ['fonts2.test'],
+          ['datatag.subdomain.domain.se']
       ];
   }
 
@@ -107,5 +123,52 @@ class ContentSecurityPolicyTest extends TestCase {
    */
   private function testHTMLDocumentProvider(): string {
       return file_get_contents(__DIR__ . '/ContentSecurityPolicyTest.html');
+  }
+
+  /**
+   * Print a table of all domains found in the HTML document.
+   * This is useful for debugging and verifying the domains extracted from the document.
+   */
+  private function printPolicyTable(array $policy): void
+  {
+      $headers = ['Directive', 'Allowed Sources'];
+      $maxDirectiveLength = strlen($headers[0]);
+      $rows = [];
+
+      // Prepare rows and calculate width
+      foreach ($policy as $directive => $sources) {
+          $chunks = array_chunk($sources, 5);
+          $lines = array_map(fn($chunk) => implode(', ', $chunk), $chunks);
+          $cell = implode("\n", $lines);
+
+          $maxDirectiveLength = max($maxDirectiveLength, strlen($directive));
+          $rows[] = [$directive, $cell];
+      }
+
+      // Calculate max height-adjusted width of sources
+      $maxSourcesLength = strlen($headers[1]);
+      foreach ($rows as [$_, $cell]) {
+          $maxSourcesLength = max($maxSourcesLength, ...array_map('strlen', explode("\n", $cell)));
+      }
+
+      $border = '+' . str_repeat('-', $maxDirectiveLength + 2) . '+' . str_repeat('-', $maxSourcesLength + 2) . '+';
+
+      // Print table
+      echo "\n$border\n";
+      echo '| ' . str_pad($headers[0], $maxDirectiveLength) . ' | ' . str_pad($headers[1], $maxSourcesLength) . " |\n";
+      echo "$border\n";
+
+      foreach ($rows as [$directive, $sources]) {
+          $sourceLines = explode("\n", $sources);
+          foreach ($sourceLines as $i => $line) {
+              echo '| '
+                  . str_pad($i === 0 ? $directive : '', $maxDirectiveLength)
+                  . ' | '
+                  . str_pad($line, $maxSourcesLength)
+                  . " |\n";
+          }
+      }
+
+      echo "$border\n\n";
   }
 }
