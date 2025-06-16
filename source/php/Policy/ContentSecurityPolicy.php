@@ -25,8 +25,6 @@ use WPMUSecurity\Policy\Resolver\ConnectSrcResolver;
  */
 class ContentSecurityPolicy
 {
-    const LINK_REGEX = '/https?:\\\\?\/\\\\?\/([a-z0-9.-]+)/i';
-
     public function __construct(private WpService $wpService){}
 
     /**
@@ -36,7 +34,7 @@ class ContentSecurityPolicy
      */
     public function addHooks(): void
     {
-        //$this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1);
+        $this->wpService->addFilter('Website/HTML/output', [$this, 'read'], 10, 1);
     }
 
     /**
