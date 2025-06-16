@@ -3,7 +3,7 @@
 /*
  * Plugin Name:    WPMU Security
  * Description:    Adds basic security features to WordPress.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author:         Sebastian Thulin
  * Author URI:     https://github.com/helsingborg-stad
  * License:        MIT
@@ -43,6 +43,7 @@ class WPMUSecurity
     $this->setupXmlRpc($wpService);
     $this->setupCommentSanitization($wpService);
     $this->setupContentSecurityPolicy($wpService, $config);
+    $this->setupPermissionsPolicy($wpService);
   }
 
   /**
@@ -148,6 +149,19 @@ class WPMUSecurity
   {
     $passwordReset = new \WPMUSecurity\Authentication\PasswordReset($wpService);
     $passwordReset->addHooks();
+  }
+
+  /**
+   * Feature: Permissions Policy
+   * This feature adds a Permissions Policy header to the response, controlling which features can be used in the browser.
+   * It checks if the Permissions Policy header is already set to avoid duplicates.
+   *
+   * @return void
+   */
+  private function setupPermissionsPolicy($wpService)
+  {
+    $permissions = new \WPMUSecurity\Headers\Permissions($wpService);
+    $permissions->addHooks();
   }
 
   /**
