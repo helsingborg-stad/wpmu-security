@@ -125,6 +125,6 @@ class ContentSecurityPolicy
             $resolvedValue          = $resolver->resolve($wrapper);
             $cspPolicies[$policy]   = empty($resolvedValue) ? ["'none'"] : $resolvedValue;
         }
-        return $cspPolicies;
+        return $this->wpService->applyFilters('WpSecurity/Csp', $cspPolicies);
     }
 }

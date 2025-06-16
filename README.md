@@ -15,4 +15,6 @@ A lightweight WordPress plugin focused on modern security hardening best practic
 
 ## ⚙️ Configuration
 
-You cannot configure this plugin in any way. Just automagic security features. 
+This plugin is designed to be hassle free, however if you like to add domains that are not detected in the content security policy. Please use the following filter: 
+
+```apply_filters('WpSecurity/Csp', $cspPolicies);```
