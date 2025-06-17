@@ -17,4 +17,16 @@ A lightweight WordPress plugin focused on modern security hardening best practic
 
 This plugin is designed to be hassle free, however if you like to add domains that are not detected in the content security policy. Please use the following filter: 
 
-```apply_filters('WpSecurity/Csp', $cspPolicies);```
+```
+add_filter(
+    'WpSecurity/Csp',
+    function ($domains) {
+        if(!isset($domains['connect-src'])) {
+            $domains['connect-src'] = [];
+        }
+        $domains['connect-src'][] = 'https://*.domain.com';
+        $domains['connect-src'][] = 'https://*.domain.net';
+        return $domains;
+    }
+);
+```
