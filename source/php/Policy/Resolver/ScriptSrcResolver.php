@@ -13,6 +13,9 @@ class ScriptSrcResolver implements DomainResolverInterface
     {
         $domains = [];
 
+        //Allow 'unsafe-eval'
+        $domains[] = $this->setUnsafeEval();
+
         // Detect inline scripts
         $unsafeInline = $this->setUnsafeInline($dom);
 
@@ -41,6 +44,14 @@ class ScriptSrcResolver implements DomainResolverInterface
             return "'unsafe-inline'";
         }
         return null;
+    }
+
+    /**
+     * Sets 'unsafe-eval'
+     * @return string
+     */
+    private function setUnsafeEval(): ?string {
+        return "'unsafe-eval'";
     }
 
     /**
