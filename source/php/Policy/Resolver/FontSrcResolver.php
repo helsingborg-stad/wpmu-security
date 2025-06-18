@@ -19,7 +19,7 @@ class FontSrcResolver implements DomainResolverInterface {
                 }
             }
         }
-        $domains[] = "data:;";
+        $domains[] = "data:";
         return array_values(array_filter(array_unique($domains)));
     }
 }
