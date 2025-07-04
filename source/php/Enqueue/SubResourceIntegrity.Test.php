@@ -75,18 +75,7 @@ class SubResourceIntegrityTest extends TestCase
     public function testCreateRelativePathHandlesCustomPorts(): void
     {
         // Mock WordPress constants and functions
-        if (!defined('WP_CONTENT_URL')) {
-            define('WP_CONTENT_URL', 'http://localhost:8080/wp-content');
-        }
-        if (!defined('WP_CONTENT_DIR')) {
-            define('WP_CONTENT_DIR', '/var/www/html/wp-content');
-        }
-        if (!defined('ABSPATH')) {
-            define('ABSPATH', '/var/www/html/');
-        }
-        if (!defined('WPINC')) {
-            define('WPINC', 'wp-includes');
-        }
+        $this->defineConstantsIfNeeded();
 
         $this->wpService->methodResponses['includesUrl'] = 'http://localhost:8080/wp-includes/';
 
@@ -103,6 +92,50 @@ class SubResourceIntegrityTest extends TestCase
         
         $result = $this->callPrivateMethod($this->sri, 'createRelativePath', [$includesUrl]);
         $this->assertEquals($expectedPath, $result, "Failed to create relative path for wp-includes with custom port");
+    }
+
+    /**
+     * @testdox createRelativePath() handles standard ports correctly
+     */
+    public function testCreateRelativePathHandlesStandardPorts(): void
+    {
+        // Mock WordPress constants and functions for standard ports
+        $this->defineConstantsIfNeeded('http://localhost', 'http://localhost');
+
+        $this->wpService->methodResponses['includesUrl'] = 'http://localhost/wp-includes/';
+
+        // Test wp-content URL without custom port
+        $contentUrl = 'http://localhost/wp-content/themes/test/style.css';
+        $expectedPath = '/var/www/html/wp-content/themes/test/style.css';
+        
+        $result = $this->callPrivateMethod($this->sri, 'createRelativePath', [$contentUrl]);
+        $this->assertEquals($expectedPath, $result, "Failed to create relative path for wp-content without custom port");
+
+        // Test wp-includes URL without custom port
+        $includesUrl = 'http://localhost/wp-includes/js/script.js';
+        $expectedPath = '/var/www/html/wp-includes/js/script.js';
+        
+        $result = $this->callPrivateMethod($this->sri, 'createRelativePath', [$includesUrl]);
+        $this->assertEquals($expectedPath, $result, "Failed to create relative path for wp-includes without custom port");
+    }
+
+    /**
+     * Define WordPress constants if they don't exist
+     */
+    private function defineConstantsIfNeeded(string $contentUrl = 'http://localhost:8080/wp-content', string $siteUrl = 'http://localhost:8080'): void
+    {
+        if (!defined('WP_CONTENT_URL')) {
+            define('WP_CONTENT_URL', $contentUrl);
+        }
+        if (!defined('WP_CONTENT_DIR')) {
+            define('WP_CONTENT_DIR', '/var/www/html/wp-content');
+        }
+        if (!defined('ABSPATH')) {
+            define('ABSPATH', '/var/www/html/');
+        }
+        if (!defined('WPINC')) {
+            define('WPINC', 'wp-includes');
+        }
     }
 
     /**
