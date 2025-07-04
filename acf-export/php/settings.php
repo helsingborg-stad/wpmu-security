@@ -87,6 +87,69 @@
                 ),
             ),
         ),
+        1 => array(
+            'key' => 'field_6867d2420e437',
+            'label' => __('Description of categories', 'wpmu-security'),
+            'name' => '',
+            'aria-label' => '',
+            'type' => 'message',
+            'instructions' => '',
+            'required' => 0,
+            'conditional_logic' => 0,
+            'wrapper' => array(
+                'width' => '',
+                'class' => '',
+                'id' => '',
+            ),
+            'message' => __('<table class="widefat striped">
+    <thead>
+        <tr>
+            <th>Directive</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>script-src</code></td>
+            <td>Load JavaScript files</td>
+        </tr>
+        <tr>
+            <td><code>style-src</code></td>
+            <td>Load CSS stylesheets</td>
+        </tr>
+        <tr>
+            <td><code>img-src</code></td>
+            <td>Load images</td>
+        </tr>
+        <tr>
+            <td><code>media-src</code></td>
+            <td>Load audio and video</td>
+        </tr>
+        <tr>
+            <td><code>frame-src</code></td>
+            <td>Load content in iframes</td>
+        </tr>
+        <tr>
+            <td><code>object-src</code></td>
+            <td>Load embedded objects (e.g. Flash, PDFs)</td>
+        </tr>
+        <tr>
+            <td><code>form-action</code></td>
+            <td>Allow forms to submit to domains</td>
+        </tr>
+        <tr>
+            <td><code>font-src</code></td>
+            <td>Load custom fonts</td>
+        </tr>
+        <tr>
+            <td><code>connect-src</code></td>
+            <td>Allow XHR/WebSocket/API connections</td>
+        </tr>
+    </tbody>
+</table>', 'wpmu-security'),
+            'new_lines' => 'wpautop',
+            'esc_html' => 0,
+        ),
     ),
     'location' => array(
         0 => array(
