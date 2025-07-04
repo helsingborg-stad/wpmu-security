@@ -3,7 +3,7 @@
 if (function_exists('acf_add_local_field_group')) {
     acf_add_local_field_group(array(
     'key' => 'group_686794bedb2eb',
-    'title' => __('Additional Domains', 'wpmu-security'),
+    'title' => __('Content Security Policy', 'wpmu-security'),
     'fields' => array(
         0 => array(
             'key' => 'field_686794bf6725d',
@@ -11,7 +11,7 @@
             'name' => 'security_csp_allowed_domains',
             'aria-label' => '',
             'type' => 'repeater',
-            'instructions' => '',
+            'instructions' => __('Most domains will be parsed automatically, but some might be missing due to unexpected formatting of code. You may add additional domains here.', 'wpmu-security'),
             'required' => 0,
             'conditional_logic' => 0,
             'wrapper' => array(
@@ -34,7 +34,7 @@
                     'name' => 'category',
                     'aria-label' => '',
                     'type' => 'select',
-                    'instructions' => '',
+                    'instructions' => __('Detailed description can be found below.', 'wpmu-security'),
                     'required' => 1,
                     'conditional_logic' => 0,
                     'wrapper' => array(
@@ -70,8 +70,8 @@
                     'name' => 'domain',
                     'aria-label' => '',
                     'type' => 'text',
-                    'instructions' => __('You may use * in your domains to define wildcards.', 'wpmu-security'),
-                    'required' => 0,
+                    'instructions' => __('You may use * in your domains to define wildcards (requires ssl on service).', 'wpmu-security'),
+                    'required' => 1,
                     'conditional_logic' => 0,
                     'wrapper' => array(
                         'width' => '50',
@@ -79,7 +79,7 @@
                         'id' => '',
                     ),
                     'default_value' => '',
-                    'maxlength' => '',
+                    'maxlength' => 253,
                     'placeholder' => '',
                     'prepend' => '',
                     'append' => '',
@@ -111,39 +111,39 @@
     <tbody>
         <tr>
             <td><code>script-src</code></td>
-            <td>Load JavaScript files</td>
+            <td>Allow JavaScript to load from these domains.</td>
         </tr>
         <tr>
             <td><code>style-src</code></td>
-            <td>Load CSS stylesheets</td>
+            <td>Allow CSS stylesheets to load from these domains.</td>
         </tr>
         <tr>
             <td><code>img-src</code></td>
-            <td>Load images</td>
+            <td>Allow images to load from these domains.</td>
         </tr>
         <tr>
             <td><code>media-src</code></td>
-            <td>Load audio and video</td>
+            <td>Allow audio and video to load from these domains.</td>
         </tr>
         <tr>
             <td><code>frame-src</code></td>
-            <td>Load content in iframes</td>
+            <td>Allow content in iframes to load from these domains.</td>
         </tr>
         <tr>
             <td><code>object-src</code></td>
-            <td>Load embedded objects (e.g. Flash, PDFs)</td>
+            <td>Allow embedded objects (e.g. Flash, PDFs) to load from these domains.</td>
         </tr>
         <tr>
             <td><code>form-action</code></td>
-            <td>Allow forms to submit to domains</td>
+            <td>Allow forms to submit to these domains.</td>
         </tr>
         <tr>
             <td><code>font-src</code></td>
-            <td>Load custom fonts</td>
+            <td>Allow fonts to load from these domains.</td>
         </tr>
         <tr>
             <td><code>connect-src</code></td>
-            <td>Allow XHR/WebSocket/API connections</td>
+            <td>Allow connections (e.g. XHR, WebSocket, APIs) to these domains.</td>
         </tr>
     </tbody>
 </table>', 'wpmu-security'),
