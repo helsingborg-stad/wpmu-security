@@ -44,6 +44,9 @@ class ContentSecurityPolicy
      */
     public function read($markup): void
     {
+        if (empty($markup)) {
+            return;
+        }
         $cspPolicies    = $this->getCategorizedDomainsFromMarkup($markup);
         $cspHeader      = $this->createCategorizedCspHeader($cspPolicies);
         $this->sendCspHeaders($cspHeader);
