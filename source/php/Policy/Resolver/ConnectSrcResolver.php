@@ -6,6 +6,7 @@ use WPMUSecurity\Policy\DomWrapperInterface;
 use WPMUSecurity\Policy\UrlInterface;
 
 class ConnectSrcResolver implements DomainResolverInterface {
+  use HostWithPortTrait;
 
   public function __construct(private UrlInterface $urlHelper) {}
 
@@ -33,7 +34,10 @@ class ConnectSrcResolver implements DomainResolverInterface {
           //Regex match for URLs
           if (preg_match_all('/https?:\/\/[^\s"\'>]+/i', $value, $matches)) {
               foreach ($matches[0] as $url) {
-                  $domains[] = parse_url($url, PHP_URL_HOST);
+                  $host = $this->extractHostWithPort($url);
+                  if ($host) {
+                      $domains[] = $host;
+                  }
               }
           }
       }
@@ -58,10 +62,13 @@ class ConnectSrcResolver implements DomainResolverInterface {
         if (!$node->hasAttribute('src') && trim($node->textContent) !== '') {
             if (preg_match_all('/https?:\\\\?\/\\\\?\/[^\s"\'>\\\\]+/i', $node->textContent, $matches)) {
                 foreach ($matches[0] as $url) {
-                    $domains[] = parse_url(
-                        $this->urlHelper->normalize($url), 
-                        PHP_URL_HOST
-                    );
+                    $normalizedUrl = $this->urlHelper->normalize($url);
+                    if ($normalizedUrl) {
+                        $host = $this->extractHostWithPort($normalizedUrl);
+                        if ($host) {
+                            $domains[] = $host;
+                        }
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ use WPMUSecurity\Policy\DomWrapperInterface;
 use WPMUSecurity\Policy\UrlInterface;
 
 class FormActionResolver implements DomainResolverInterface {
+    use HostWithPortTrait;
   
     public function __construct(private UrlInterface $urlHelper) {}
 
@@ -13,7 +14,11 @@ class FormActionResolver implements DomainResolverInterface {
         $domains = [];
         foreach ($dom->query('//form[@action]') as $node) {
             if ($node instanceof \DOMElement) {
-                $domains[] = parse_url($node->getAttribute('action'), PHP_URL_HOST);
+                $action = $node->getAttribute('action');
+                $host = $this->extractHostWithPort($action);
+                if ($host) {
+                    $domains[] = $host;
+                }
             }
         }
         $domains[] = "'self'";

@@ -6,6 +6,7 @@ use WPMUSecurity\Policy\DomWrapperInterface;
 use WPMUSecurity\Policy\UrlInterface;
 
 class ImgSrcResolver implements DomainResolverInterface {
+    use HostWithPortTrait;
 
     private const IMG_SUFFIXES = [
         'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg',
@@ -34,7 +35,11 @@ class ImgSrcResolver implements DomainResolverInterface {
             if (!$node instanceof \DOMElement) {
                 continue;
             } 
-            $domains[] = parse_url($node->getAttribute('src'), PHP_URL_HOST);
+            $src = $node->getAttribute('src');
+            $host = $this->extractHostWithPort($src);
+            if ($host) {
+                $domains[] = $host;
+            }
         }
 
         foreach ($dom->query('//picture/source[@srcset]') as $source) {
@@ -46,7 +51,10 @@ class ImgSrcResolver implements DomainResolverInterface {
                 $url = trim(explode(' ', $urlPart)[0]);
                 if (preg_match('/\.(?:' . implode('|', self::IMG_SUFFIXES) . ')$/i', $url)) {
                     $url = $this->urlHelper->normalize($url);
-                    $domains[] = parse_url($url, PHP_URL_HOST);
+                    $host = $this->extractHostWithPort($url);
+                    if ($host) {
+                        $domains[] = $host;
+                    }
                 }
             }
         }
@@ -74,10 +82,13 @@ class ImgSrcResolver implements DomainResolverInterface {
                       if (!preg_match('/\.(?:' . implode('|', self::IMG_SUFFIXES) . ')$/i', $url)) {
                           continue;
                       }
-                      $domains[] = parse_url(
-                          $this->urlHelper->normalize($url), 
-                          PHP_URL_HOST
-                      );
+                      $normalizedUrl = $this->urlHelper->normalize($url);
+                      if ($normalizedUrl) {
+                          $host = $this->extractHostWithPort($normalizedUrl);
+                          if ($host) {
+                              $domains[] = $host;
+                          }
+                      }
                   }
               }
           }

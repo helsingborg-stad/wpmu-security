@@ -6,6 +6,7 @@ use WPMUSecurity\Policy\DomWrapperInterface;
 use WPMUSecurity\Policy\UrlInterface;
 
 class ObjectSrcResolver implements DomainResolverInterface {
+    use HostWithPortTrait;
 
     public function __construct(private UrlInterface $urlHelper) {}
 
@@ -15,9 +16,13 @@ class ObjectSrcResolver implements DomainResolverInterface {
             if (!$node instanceof \DOMElement) {
                 continue;
             }
-            $domains[] = parse_url($node->getAttribute(
+            $url = $node->getAttribute(
               $node->hasAttribute('data') ? 'data' : 'src'
-            ), PHP_URL_HOST);
+            );
+            $host = $this->extractHostWithPort($url);
+            if ($host) {
+                $domains[] = $host;
+            }
         }
         return array_values(array_filter(array_unique($domains)));
     }
