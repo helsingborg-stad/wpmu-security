@@ -83,6 +83,24 @@
                     "parent_repeater": "field_686794bf6725d"
                 }
             ]
+        },
+        {
+            "key": "field_6867d2420e437",
+            "label": "Description of categories",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "<table class=\"widefat striped\">\r\n  <thead>\r\n    <tr>\r\n      <th>Directive<\/th>\r\n      <th>Description<\/th>\r\n    <\/tr>\r\n  <\/thead>\r\n  <tbody>\r\n    <tr>\r\n      <td><code>script-src<\/code><\/td>\r\n      <td>Load JavaScript files<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>style-src<\/code><\/td>\r\n      <td>Load CSS stylesheets<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>img-src<\/code><\/td>\r\n      <td>Load images<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>media-src<\/code><\/td>\r\n      <td>Load audio and video<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>frame-src<\/code><\/td>\r\n      <td>Load content in iframes<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>object-src<\/code><\/td>\r\n      <td>Load embedded objects (e.g. Flash, PDFs)<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>form-action<\/code><\/td>\r\n      <td>Allow forms to submit to domains<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>font-src<\/code><\/td>\r\n      <td>Load custom fonts<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>connect-src<\/code><\/td>\r\n      <td>Allow XHR\/WebSocket\/API connections<\/td>\r\n    <\/tr>\r\n  <\/tbody>\r\n<\/table>",
+            "new_lines": "wpautop",
+            "esc_html": 0
         }
     ],
     "location": [
