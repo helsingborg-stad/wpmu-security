@@ -14,6 +14,7 @@
 
 namespace WPMUSecurity;
 
+use AcfService\Implementations\NativeAcfService;
 use WpService\Implementations\NativeWpService;
 
 if (! defined('WPINC')) {
@@ -26,10 +27,11 @@ class WPMUSecurity
   {
     //Autoload
     $this->autoload();
-    
+
     //Services
-    $wpService = new NativeWpService();
-    $config = new \WPMUSecurity\Config($wpService);
+    $wpService  = new NativeWpService();
+    $acfService = new NativeAcfService();
+    $config     = new \WPMUSecurity\Config($wpService);
 
     //Translations
     $this->loadTranslations($wpService);
@@ -44,6 +46,20 @@ class WPMUSecurity
     $this->setupCommentSanitization($wpService);
     $this->setupContentSecurityPolicy($wpService, $config);
     $this->setupPermissionsPolicy($wpService);
+    $this->setUpAdminOptionsPage($wpService, $acfService);
+  }
+
+  /**
+   * Feature: Admin Options Page
+   * This feature sets up an admin options page for the plugin using ACF.
+   * It checks if the options page is already set up to avoid duplicates.
+   *
+   * @return void
+   */
+  public function setUpAdminOptionsPage($wpService, $acfService)
+  {
+    $settings = new \WPMUSecurity\Admin\Settings($wpService, $acfService);
+    $settings->addHooks();
   }
 
   /**
