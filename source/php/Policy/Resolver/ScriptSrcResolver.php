@@ -7,6 +7,8 @@ use WPMUSecurity\Policy\UrlInterface;
 
 class ScriptSrcResolver implements DomainResolverInterface
 {
+    use HostWithPortTrait;
+
     public function __construct(private UrlInterface $urlHelper) {}
 
     public function resolve(DomWrapperInterface $dom): array
@@ -68,10 +70,13 @@ class ScriptSrcResolver implements DomainResolverInterface
                 continue;
             }
 
-            $domains[] = parse_url(
-                $this->urlHelper->normalize($node->getAttribute('src')), 
-                PHP_URL_HOST
-            );
+            $normalizedUrl = $this->urlHelper->normalize($node->getAttribute('src'));
+            if ($normalizedUrl) {
+                $host = $this->extractHostWithPort($normalizedUrl);
+                if ($host) {
+                    $domains[] = $host;
+                }
+            }
         }
 
         return array_values(array_filter(array_unique($domains)));
@@ -95,10 +100,13 @@ class ScriptSrcResolver implements DomainResolverInterface
           if (!$node->hasAttribute('src') && trim($node->textContent) !== '') {
               if (preg_match_all('/https?:\\\\?\/\\\\?\/[^\s"\'>\\\\]+/i', $node->textContent, $matches)) {
                   foreach ($matches[0] as $url) {
-                      $domains[] = parse_url(
-                          $this->urlHelper->normalize($url), 
-                          PHP_URL_HOST
-                      );
+                      $normalizedUrl = $this->urlHelper->normalize($url);
+                      if ($normalizedUrl) {
+                          $host = $this->extractHostWithPort($normalizedUrl);
+                          if ($host) {
+                              $domains[] = $host;
+                          }
+                      }
                   }
               }
           }
