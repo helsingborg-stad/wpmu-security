@@ -11,10 +11,20 @@ class ContentSecurityPolicyTest extends TestCase {
      * @testdox class can be instantiated
      */
     public function testClassCanBeInstantiated() {
-        $wpService = new FakeWpService();
+        $wpService = $this->getFakeWpService();
         $this->assertInstanceOf( ContentSecurityPolicy::class, new ContentSecurityPolicy(
             $wpService
         ));
+    }
+
+    /**
+     * @testdox Check that we have a html document to test against.
+     */
+    public function testHtmlDocumentIsAvailable() {
+        $testDocument = $this->testHTMLDocumentProvider();
+        $this->assertNotEmpty($testDocument, 'Test HTML document is empty.');
+        $this->assertIsString($testDocument, 'Test HTML document is not a string.');
+        $this->assertStringContainsString('<!DOCTYPE html>', $testDocument, 'Test HTML document does not contain a DOCTYPE declaration.');
     }
 
     /**
@@ -23,7 +33,7 @@ class ContentSecurityPolicyTest extends TestCase {
     public function testNoLinkElementsAreRecivedFromDocument() {
       $testDocument           = $this->testHTMLDocumentProvider();
       $contentSecurityPolicy  = new ContentSecurityPolicy(
-        new FakeWpService()
+        $this->getFakeWpService()
       );
 
       $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
@@ -42,7 +52,7 @@ class ContentSecurityPolicyTest extends TestCase {
     {
         $testDocument           = $this->testHTMLDocumentProvider();
         $contentSecurityPolicy  = new ContentSecurityPolicy(
-          new FakeWpService()
+          $this->getFakeWpService()
         );
 
         $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
@@ -59,7 +69,7 @@ class ContentSecurityPolicyTest extends TestCase {
     {
         $testDocument           = $this->testHTMLDocumentProvider();
         $contentSecurityPolicy  = new ContentSecurityPolicy(
-          new FakeWpService()
+          $this->getFakeWpService()
         );
         $result   = $contentSecurityPolicy->getCategorizedDomainsFromMarkup($testDocument);
         $this->printPolicyTable($result);
@@ -170,5 +180,13 @@ class ContentSecurityPolicyTest extends TestCase {
       }
 
       echo "$border\n\n";
+  }
+
+  private function getFakeWpService(): FakeWpService
+  {
+      return new FakeWpService([
+          'addFilter' => fn($hookName, $callback, $priority = 10, $acceptedArgs = 1) => true,
+          'applyFilters' => fn($hookName, $value) => $value
+      ]);
   }
 }

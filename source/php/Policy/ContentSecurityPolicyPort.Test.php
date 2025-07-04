@@ -12,7 +12,10 @@ class ContentSecurityPolicyPortTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->wpService = new FakeWpService();
+        $this->wpService = new FakeWpService([
+          'addFilter' => fn($hookName, $callback, $priority = 10, $acceptedArgs = 1) => true,
+          'applyFilters' => fn($hookName, $value) => $value
+        ]);
         $this->csp = new ContentSecurityPolicy($this->wpService);
     }
 

@@ -1,0 +1,133 @@
+[{
+    "key": "group_686794bedb2eb",
+    "title": "Content Security Policy",
+    "fields": [
+        {
+            "key": "field_686794bf6725d",
+            "label": "Allowed Domains",
+            "name": "security_csp_allowed_domains",
+            "aria-label": "",
+            "type": "repeater",
+            "instructions": "Most domains will be parsed automatically, but some might be missing due to unexpected formatting of code. You may add additional domains here.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "acfe_repeater_stylised_button": 0,
+            "layout": "table",
+            "pagination": 0,
+            "min": 0,
+            "max": 0,
+            "collapsed": "",
+            "button_label": "Add domain",
+            "rows_per_page": 20,
+            "sub_fields": [
+                {
+                    "key": "field_68679b1075e68",
+                    "label": "Category",
+                    "name": "category",
+                    "aria-label": "",
+                    "type": "select",
+                    "instructions": "Detailed description can be found below.",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "50",
+                        "class": "",
+                        "id": ""
+                    },
+                    "choices": {
+                        "script-src": "script-src",
+                        "style-src": "style-src",
+                        "img-src": "img-src",
+                        "media-src": "media-src",
+                        "frame-src": "frame-src",
+                        "object-src": "object-src",
+                        "form-action": "form-action",
+                        "font-src": "font-src",
+                        "connect-src": "connect-src"
+                    },
+                    "default_value": false,
+                    "return_format": "value",
+                    "multiple": 0,
+                    "allow_null": 0,
+                    "ui": 0,
+                    "ajax": 0,
+                    "placeholder": "",
+                    "allow_custom": 0,
+                    "search_placeholder": "",
+                    "parent_repeater": "field_686794bf6725d"
+                },
+                {
+                    "key": "field_68679bef9922a",
+                    "label": "Domain",
+                    "name": "domain",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "You may use * in your domains to define wildcards (requires ssl on service).",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "50",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 253,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_686794bf6725d"
+                }
+            ]
+        },
+        {
+            "key": "field_6867d2420e437",
+            "label": "Description of categories",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "<table class=\"widefat striped\">\r\n  <thead>\r\n    <tr>\r\n      <th>Directive<\/th>\r\n      <th>Description<\/th>\r\n    <\/tr>\r\n  <\/thead>\r\n  <tbody>\r\n    <tr>\r\n      <td><code>script-src<\/code><\/td>\r\n      <td>Allow JavaScript to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>style-src<\/code><\/td>\r\n      <td>Allow CSS stylesheets to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>img-src<\/code><\/td>\r\n      <td>Allow images to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>media-src<\/code><\/td>\r\n      <td>Allow audio and video to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>frame-src<\/code><\/td>\r\n      <td>Allow content in iframes to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>object-src<\/code><\/td>\r\n      <td>Allow embedded objects (e.g. Flash, PDFs) to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>form-action<\/code><\/td>\r\n      <td>Allow forms to submit to these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>font-src<\/code><\/td>\r\n      <td>Allow fonts to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>connect-src<\/code><\/td>\r\n      <td>Allow connections (e.g. XHR, WebSocket, APIs) to these domains.<\/td>\r\n    <\/tr>\r\n  <\/tbody>\r\n<\/table>",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "wpmu-security-settings"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "left",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "acfe_display_title": "",
+    "acfe_autosync": [
+        "php",
+        "json"
+    ],
+    "acfe_form": 0,
+    "acfe_meta": "",
+    "acfe_note": ""
+}]
+

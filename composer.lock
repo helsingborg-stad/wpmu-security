@@ -4,8 +4,89 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f3d909102e8f3e20ce3817472ee9cb13",
+    "content-hash": "31767b64f56637742ee99888be3eb62a",
     "packages": [
+        {
+            "name": "helsingborg-stad/acf-export-manager",
+            "version": "1.0.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/helsingborg-stad/acf-export-manager.git",
+                "reference": "9e1b282460cebf68ec4d83cd3c11d8fe7e3612fd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/helsingborg-stad/acf-export-manager/zipball/9e1b282460cebf68ec4d83cd3c11d8fe7e3612fd",
+                "reference": "9e1b282460cebf68ec4d83cd3c11d8fe7e3612fd",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AcfExportManager\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kristoffer Svanmark",
+                    "email": "kristoffer.svanmark@knowit.se"
+                }
+            ],
+            "description": "ACF Export Manager is a extension that let's you automatically export specified your ACF fields on save.",
+            "support": {
+                "issues": "https://github.com/helsingborg-stad/acf-export-manager/issues",
+                "source": "https://github.com/helsingborg-stad/acf-export-manager/tree/1.0.12"
+            },
+            "time": "2023-05-25T07:56:58+00:00"
+        },
+        {
+            "name": "helsingborg-stad/acfservice",
+            "version": "1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/helsingborg-stad/acfservice.git",
+                "reference": "8d8629c6f087c8a1ce2aba5b9c40bf03b84d0abc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/helsingborg-stad/acfservice/zipball/8d8629c6f087c8a1ce2aba5b9c40bf03b84d0abc",
+                "reference": "8d8629c6f087c8a1ce2aba5b9c40bf03b84d0abc",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "helsingborg-stad/phpcs": "^0.3.5",
+                "phpunit/phpunit": "^9.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AcfService\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Thor Brink",
+                    "email": "thor.brink@helsingborg.se"
+                }
+            ],
+            "description": "Simplifies ACF integration by providing a centralized AcfService that exposes global ACF functions in a streamlined manner. Simplify your development workflow and enhance ACF integration with ease.",
+            "support": {
+                "issues": "https://github.com/helsingborg-stad/acfservice/issues",
+                "source": "https://github.com/helsingborg-stad/acfservice/tree/1.3.0"
+            },
+            "time": "2025-06-30T13:59:30+00:00"
+        },
         {
             "name": "helsingborg-stad/wpservice",
             "version": "2.0.8",
@@ -656,16 +737,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.4.0",
+            "version": "v5.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "447a020a1f875a434d62f2a401f53b82a396e494"
+                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/447a020a1f875a434d62f2a401f53b82a396e494",
-                "reference": "447a020a1f875a434d62f2a401f53b82a396e494",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/ae59794362fe85e051a58ad36b289443f57be7a9",
+                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9",
                 "shasum": ""
             },
             "require": {
@@ -708,9 +789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.4.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.5.0"
             },
-            "time": "2024-12-30T11:07:19+00:00"
+            "time": "2025-05-31T08:24:38+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -2548,10 +2629,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": {},
-    "platform-dev": {},
+    "platform": [],
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
