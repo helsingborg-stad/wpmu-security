@@ -14,6 +14,7 @@ use WPMUSecurity\Policy\Resolver\ObjectSrcResolver;
 use WPMUSecurity\Policy\Resolver\FormActionResolver;
 use WPMUSecurity\Policy\Resolver\FontSrcResolver;
 use WPMUSecurity\Policy\Resolver\ConnectSrcResolver;
+use WPMUSecurity\Policy\Resolver\DefaultResolver;
 
 /**
  * Class ContentSecurityPolicy
@@ -121,6 +122,7 @@ class ContentSecurityPolicy
             'form-action'   => new FormActionResolver($urlHelper),
             'font-src'      => new FontSrcResolver($urlHelper),
             'connect-src'   => new ConnectSrcResolver($urlHelper),
+            'default-src'   => new DefaultResolver($urlHelper),
         ];
 
         $cspPolicies = [];
