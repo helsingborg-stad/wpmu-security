@@ -101,6 +101,10 @@ class Settings implements HookableInterface
   {
       $additionalDomains = $this->acfService->getField(self::ACF_OPTION_NAME, 'option', false);
 
+      if (empty($additionalDomains) || !is_array($additionalDomains)) {
+          return $domains;
+      }
+
       foreach ($additionalDomains as $domainRecord) {
           $domain   = $domainRecord[self::ACF_DOMAIN_KEY] ?? '';
           $category = $domainRecord[self::ACF_CATEGORY_KEY] ?? '';
