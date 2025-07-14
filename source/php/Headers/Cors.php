@@ -20,9 +20,9 @@ class Cors
 
     /**
      * Adds CORS headers to the response.
-     * This allows cross-origin requests from the current domain and nothing else.
+     * This allows cross-origin requests from configured domains.
      * It checks if the headers are already set to avoid duplicates.
-     * If not set, it adds the Access-Control-Allow-Origin header with the current domain.
+     * If not set, it adds the Access-Control-Allow-Origin header with the appropriate origin.
      */
     public function addCorsHeaders(): void
     {
@@ -31,9 +31,100 @@ class Cors
           return;
         }
       }
+      
       if (!headers_sent()) {
-        header('Access-Control-Allow-Origin: ' . $this->getHomeUrl());
+        $allowedOrigins = $this->getAllowedOrigins();
+        $origin = $this->getRequestOrigin();
+        
+        if ($this->isOriginAllowed($origin, $allowedOrigins)) {
+          header('Access-Control-Allow-Origin: ' . $origin);
+          header('Access-Control-Allow-Credentials: true');
+          header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+          header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+        } else {
+          // Fallback to current domain for backward compatibility
+          header('Access-Control-Allow-Origin: ' . $this->getHomeUrl());
+        }
       }      
+    }
+
+    /**
+     * Gets all allowed origins including current domain and custom origins.
+     *
+     * @return array The allowed origins.
+     */
+    private function getAllowedOrigins(): array
+    {
+      $origins = [$this->getHomeUrl()];
+      
+      // Apply filter to allow custom origins
+      $origins = $this->wpService->applyFilters('WpSecurity/Cors', $origins);
+      
+      return array_unique($origins);
+    }
+
+    /**
+     * Gets the origin from the current request.
+     *
+     * @return string|null The request origin or null if not set.
+     */
+    private function getRequestOrigin(): ?string
+    {
+      return $_SERVER['HTTP_ORIGIN'] ?? null;
+    }
+
+    /**
+     * Checks if the given origin is allowed.
+     *
+     * @param string|null $origin The origin to check.
+     * @param array $allowedOrigins The list of allowed origins.
+     * @return bool Whether the origin is allowed.
+     */
+    private function isOriginAllowed(?string $origin, array $allowedOrigins): bool
+    {
+      if (empty($origin)) {
+        return false;
+      }
+
+      foreach ($allowedOrigins as $allowedOrigin) {
+        if ($this->matchesOrigin($origin, $allowedOrigin)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    /**
+     * Checks if an origin matches an allowed origin pattern.
+     *
+     * @param string $origin The origin to check.
+     * @param string $allowedOrigin The allowed origin pattern.
+     * @return bool Whether the origin matches.
+     */
+    private function matchesOrigin(string $origin, string $allowedOrigin): bool
+    {
+      // Exact match
+      if ($origin === $allowedOrigin) {
+        return true;
+      }
+
+      // Wildcard subdomain matching
+      if (strpos($allowedOrigin, '*.') !== false) {
+        // Extract the domain part after the wildcard
+        $domain = substr($allowedOrigin, strpos($allowedOrigin, '*.') + 2);
+        
+        // Check if the origin ends with the domain
+        if (substr($origin, -strlen($domain)) === $domain) {
+          // Make sure there's a dot or protocol separator before the domain
+          $beforeDomain = substr($origin, 0, -strlen($domain));
+          return preg_match('/^https?:\/\/([a-z0-9.-]+\.)?$/', $beforeDomain) === 1;
+        }
+        
+        return false;
+      }
+
+      return false;
     }
 
     /**

@@ -12,6 +12,13 @@ class Settings implements HookableInterface
   private const ACF_DOMAIN_KEY = 'field_68679bef9922a'; // Domain field key
   private const ACF_CATEGORY_KEY = 'field_68679b1075e68'; // Category field key
   private const ACF_OPTION_NAME = 'security_csp_allowed_domains'; // ACF option name for allowed domains
+  
+  // CORS-specific ACF keys
+  private const ACF_CORS_DOMAINS_KEY = 'field_cors_domains'; // CORS domains field key
+  private const ACF_CORS_DOMAIN_KEY = 'field_cors_domain'; // Individual CORS domain field key
+  private const ACF_CORS_SUBDOMAIN_KEY = 'field_cors_subdomain_support'; // CORS subdomain support field key
+  private const ACF_CORS_OPTION_NAME = 'security_cors_allowed_domains'; // ACF option name for CORS domains
+  private const ACF_CORS_SUBDOMAIN_OPTION_NAME = 'security_cors_subdomain_support'; // ACF option name for subdomain support
 
   /**
    * Settings constructor.
@@ -35,7 +42,9 @@ class Settings implements HookableInterface
     $this->wpService->addAction('acf/init', [$this, 'registerSettingsPage']);
     $this->wpService->addAction('init', [$this, 'fieldConfigurationHandler']);
     $this->wpService->addFilter('WpSecurity/Csp', [$this, 'addCspDomains'], 10, 1);
+    $this->wpService->addFilter('WpSecurity/Cors', [$this, 'addCorsOrigins'], 10, 1);
     $this->wpService->addFilter('acf/update_value/key=' . self::ACF_DOMAIN_KEY, [$this, 'sanitizeDomainFieldOnSave'], 10, 3);
+    $this->wpService->addFilter('acf/update_value/key=' . self::ACF_CORS_DOMAIN_KEY, [$this, 'sanitizeDomainFieldOnSave'], 10, 3);
   }
 
   /**
@@ -72,6 +81,7 @@ class Settings implements HookableInterface
     );
     $acfExportManager->autoExport([
       'settings' => 'group_686794bedb2eb',
+      'cors-settings' => 'group_cors_settings',
     ]);
     $acfExportManager->import();
   }
@@ -121,6 +131,68 @@ class Settings implements HookableInterface
       }
 
       return $domains;
+    }
+
+    /**
+     * This function adds additional origins to the CORS configuration.
+     * It retrieves domains from ACF options and formats them for CORS headers.
+     *
+     * @param array $origins The existing CORS origins.
+     * @return array The updated CORS origins with additional domains added.
+     */
+    public function addCorsOrigins($origins): array
+    {
+        $corsSettings = $this->acfService->getField(self::ACF_CORS_OPTION_NAME, 'option', false);
+        $subdomainSupport = $this->acfService->getField(self::ACF_CORS_SUBDOMAIN_OPTION_NAME, 'option', false);
+
+        if (empty($corsSettings) || !is_array($corsSettings)) {
+            return $origins;
+        }
+
+        foreach ($corsSettings as $domainRecord) {
+            $domain = $domainRecord[self::ACF_CORS_DOMAIN_KEY] ?? '';
+
+            if (empty($domain)) {
+                continue;
+            }
+
+            // Format domain for CORS origin
+            $formattedDomain = $this->formatDomainForCors($domain, $subdomainSupport);
+            if ($formattedDomain) {
+                $origins[] = $formattedDomain;
+            }
+        }
+
+        return array_unique($origins);
+    }
+
+    /**
+     * Formats a domain for CORS origin use.
+     *
+     * @param string $domain The domain to format.
+     * @param bool $subdomainSupport Whether subdomain support is enabled.
+     * @return string|null The formatted domain or null if invalid.
+     */
+    private function formatDomainForCors(string $domain, bool $subdomainSupport = false): ?string
+    {
+        $domain = trim($domain);
+        
+        // Handle wildcard domains
+        if (strpos($domain, '*') !== false) {
+            return $this->addProtocolToWildcardDomain($domain);
+        }
+
+        // If subdomain support is enabled, add wildcard prefix
+        if ($subdomainSupport && strpos($domain, '*') === false) {
+            $domain = '*.' . $domain;
+        }
+
+        // Add protocol if not present
+        if (!preg_match('/^https?:\/\//', $domain)) {
+            $domain = 'https://' . $domain;
+        }
+
+        return $domain;
     }
 
     /**
