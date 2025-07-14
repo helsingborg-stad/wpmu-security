@@ -1,0 +1,117 @@
+[{
+    "key": "group_cors_settings",
+    "title": "CORS Settings",
+    "fields": [
+        {
+            "key": "field_cors_subdomain_support",
+            "label": "Allow Subdomains",
+            "name": "security_cors_subdomain_support",
+            "aria-label": "",
+            "type": "true_false",
+            "instructions": "Enable to automatically allow subdomains for all configured CORS domains.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "default_value": 0,
+            "ui": 1,
+            "ui_on_text": "Yes",
+            "ui_off_text": "No"
+        },
+        {
+            "key": "field_cors_domains",
+            "label": "Allowed Origins",
+            "name": "security_cors_allowed_domains",
+            "aria-label": "",
+            "type": "repeater",
+            "instructions": "Add domains that are allowed to make cross-origin requests to your site. These will be added to the Access-Control-Allow-Origin header.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "acfe_repeater_stylised_button": 0,
+            "layout": "table",
+            "pagination": 0,
+            "min": 0,
+            "max": 0,
+            "collapsed": "",
+            "button_label": "Add origin",
+            "rows_per_page": 20,
+            "sub_fields": [
+                {
+                    "key": "field_cors_domain",
+                    "label": "Domain",
+                    "name": "domain",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Enter the domain without protocol (e.g., \"example.com\"). Use * for wildcards (e.g., \"*.example.com\").",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 253,
+                    "placeholder": "example.com",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_cors_domains"
+                }
+            ]
+        },
+        {
+            "key": "field_cors_description",
+            "label": "CORS Information",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "<p><strong>Cross-Origin Resource Sharing (CORS)<\/strong> allows web pages from other domains to access resources on your site.<\/p>\n<p><strong>Subdomain Support:<\/strong> When enabled, all configured domains will automatically allow their subdomains (e.g., configuring \"example.com\" will also allow \"sub.example.com\").<\/p>\n<p><strong>Security Note:<\/strong> Only add domains you trust. CORS origins allow other websites to make requests to your site on behalf of users.<\/p>",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "wpmu-security-settings"
+            }
+        ]
+    ],
+    "menu_order": 1,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "left",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "acfe_display_title": "",
+    "acfe_autosync": [
+        "php",
+        "json"
+    ],
+    "acfe_form": 0,
+    "acfe_meta": "",
+    "acfe_note": ""
+}]
+

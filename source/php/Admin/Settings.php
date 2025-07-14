@@ -80,7 +80,7 @@ class Settings implements HookableInterface
       'acf-fields'
     );
     $acfExportManager->autoExport([
-      'settings' => 'group_686794bedb2eb',
+      'csp-settings' => 'group_686794bedb2eb',
       'cors-settings' => 'group_cors_settings',
     ]);
     $acfExportManager->import();
