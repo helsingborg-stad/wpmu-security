@@ -44,7 +44,7 @@ class Settings implements HookableInterface
     $this->wpService->addFilter('WpSecurity/Csp', [$this, 'addCspDomains'], 10, 1);
     $this->wpService->addFilter('WpSecurity/Cors', [$this, 'addCorsOrigins'], 10, 1);
     $this->wpService->addFilter('acf/update_value/key=' . self::ACF_DOMAIN_KEY, [$this, 'sanitizeDomainFieldOnSave'], 10, 3);
-    $this->wpService->addFilter('acf/update_value/key=' . self::ACF_CORS_DOMAIN_KEY, [$this, 'sanitizeDomainFieldOnSave'], 10, 3);
+    $this->wpService->addFilter('acf/update_value/name=domain', [$this, 'sanitizeDomainFieldOnSave'], 10, 3);
   }
 
   /**
@@ -150,7 +150,7 @@ class Settings implements HookableInterface
         }
 
         foreach ($corsSettings as $domainRecord) {
-            $domain = $domainRecord[self::ACF_CORS_DOMAIN_KEY] ?? '';
+            $domain = $domainRecord['domain'] ?? '';
 
             if (empty($domain)) {
                 continue;
