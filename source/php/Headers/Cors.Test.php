@@ -69,6 +69,78 @@ class CorsTest extends TestCase
     }
 
     /**
+     * @testdox getAllowedOrigins adds wildcard current domain when subdomain support is enabled
+     */
+    public function testGetAllowedOriginsAddsWildcardCurrentDomain(): void
+    {
+        $wpService = new FakeWpService([
+            'addAction' => fn($hookName, $callback, $priority = 10, $acceptedArgs = 1) => true,
+            'applyFilters' => fn($hookName, $value) => $value,
+            'getHomeUrl' => fn() => 'https://example.com',
+            'getOption' => fn($optionName, $default = false) => $optionName === 'security_cors_subdomain_support' ? true : $default
+        ]);
+        
+        $cors = new Cors($wpService);
+        
+        $result = $this->callPrivateMethod($cors, 'getAllowedOrigins');
+        
+        $this->assertIsArray($result);
+        $this->assertContains('https://example.com', $result);
+        $this->assertContains('https://*.example.com', $result);
+    }
+
+    /**
+     * @testdox getAllowedOrigins does not add wildcard current domain when subdomain support is disabled
+     */
+    public function testGetAllowedOriginsDoesNotAddWildcardCurrentDomain(): void
+    {
+        $wpService = new FakeWpService([
+            'addAction' => fn($hookName, $callback, $priority = 10, $acceptedArgs = 1) => true,
+            'applyFilters' => fn($hookName, $value) => $value,
+            'getHomeUrl' => fn() => 'https://example.com',
+            'getOption' => fn($optionName, $default = false) => $optionName === 'security_cors_subdomain_support' ? false : $default
+        ]);
+        
+        $cors = new Cors($wpService);
+        
+        $result = $this->callPrivateMethod($cors, 'getAllowedOrigins');
+        
+        $this->assertIsArray($result);
+        $this->assertContains('https://example.com', $result);
+        $this->assertNotContains('https://*.example.com', $result);
+    }
+
+    /**
+     * @testdox addWildcardToCurrentDomain adds wildcard prefix to domain
+     */
+    public function testAddWildcardToCurrentDomain(): void
+    {
+        $wpService = $this->getFakeWpService();
+        $cors = new Cors($wpService);
+        
+        $result = $this->callPrivateMethod($cors, 'addWildcardToCurrentDomain', 'https://example.com');
+        $this->assertEquals('https://*.example.com', $result);
+        
+        $result = $this->callPrivateMethod($cors, 'addWildcardToCurrentDomain', 'http://test.org');
+        $this->assertEquals('http://*.test.org', $result);
+    }
+
+    /**
+     * @testdox addWildcardToCurrentDomain handles malformed URLs gracefully
+     */
+    public function testAddWildcardToCurrentDomainHandlesMalformedUrls(): void
+    {
+        $wpService = $this->getFakeWpService();
+        $cors = new Cors($wpService);
+        
+        $result = $this->callPrivateMethod($cors, 'addWildcardToCurrentDomain', 'invalid-url');
+        $this->assertEquals('invalid-url', $result);
+        
+        $result = $this->callPrivateMethod($cors, 'addWildcardToCurrentDomain', '');
+        $this->assertEquals('', $result);
+    }
+
+    /**
      * @testdox matchesOrigin returns true for exact matches
      */
     public function testMatchesOriginExactMatch(): void

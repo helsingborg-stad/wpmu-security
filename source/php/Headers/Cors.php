@@ -57,6 +57,14 @@ class Cors
     {
       $origins = [$this->getHomeUrl()];
       
+      // Check if subdomain support is enabled for current domain
+      $subdomainSupport = $this->wpService->getOption('security_cors_subdomain_support', false);
+      if ($subdomainSupport) {
+        // Add wildcard version of current domain
+        $currentDomain = $this->getHomeUrl();
+        $origins[] = $this->addWildcardToCurrentDomain($currentDomain);
+      }
+      
       // Apply filter to allow custom origins
       $origins = $this->wpService->applyFilters('WpSecurity/Cors', $origins);
       
@@ -135,5 +143,26 @@ class Cors
     private function getHomeUrl(): string
     {
       return $this->wpService->getHomeUrl();
+    }
+
+    /**
+     * Adds wildcard subdomain support to the current domain.
+     *
+     * @param string $currentDomain The current domain URL.
+     * @return string The domain with wildcard subdomain support.
+     */
+    private function addWildcardToCurrentDomain(string $currentDomain): string
+    {
+      // Extract domain from URL (e.g., https://example.com -> example.com)
+      $parsedUrl = parse_url($currentDomain);
+      $domain = $parsedUrl['host'] ?? '';
+      
+      if (empty($domain)) {
+        return $currentDomain;
+      }
+      
+      // Add wildcard subdomain support
+      $protocol = $parsedUrl['scheme'] ?? 'https';
+      return $protocol . '://*.' . $domain;
     }
 }

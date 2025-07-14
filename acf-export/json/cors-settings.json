@@ -8,7 +8,7 @@
             "name": "security_cors_subdomain_support",
             "aria-label": "",
             "type": "true_false",
-            "instructions": "Enable to automatically allow subdomains for all configured CORS domains.",
+            "instructions": "Enable to automatically allow subdomains for the current domain. This will add wildcard subdomain support (e.g., if your site is example.com, this will allow *.example.com).",
             "required": 0,
             "conditional_logic": 0,
             "wrapper": {
@@ -82,7 +82,7 @@
                 "class": "",
                 "id": ""
             },
-            "message": "<p><strong>Cross-Origin Resource Sharing (CORS)<\/strong> allows web pages from other domains to access resources on your site.<\/p>\n<p><strong>Subdomain Support:<\/strong> When enabled, all configured domains will automatically allow their subdomains (e.g., configuring \"example.com\" will also allow \"sub.example.com\").<\/p>\n<p><strong>Security Note:<\/strong> Only add domains you trust. CORS origins allow other websites to make requests to your site on behalf of users.<\/p>",
+            "message": "<p><strong>Cross-Origin Resource Sharing (CORS)<\/strong> allows web pages from other domains to access resources on your site.<\/p>\n<p><strong>Current Domain:<\/strong> The current domain is always allowed for CORS requests.<\/p>\n<p><strong>Allow Subdomains:<\/strong> When enabled, this adds wildcard subdomain support for the current domain (e.g., if your site is example.com, this will allow *.example.com).<\/p>\n<p><strong>Additional Origins:<\/strong> You can add additional trusted domains below that should be allowed to make CORS requests.<\/p>\n<p><strong>Security Note:<\/strong> Only add domains you trust. CORS origins allow other websites to make requests to your site on behalf of users.<\/p>",
             "new_lines": "wpautop",
             "esc_html": 0
         }

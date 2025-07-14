@@ -11,7 +11,7 @@
             'name' => 'security_cors_subdomain_support',
             'aria-label' => '',
             'type' => 'true_false',
-            'instructions' => __('Enable to automatically allow subdomains for all configured CORS domains.', 'wpmu-security'),
+            'instructions' => __('Enable to automatically allow subdomains for the current domain. This will add wildcard subdomain support (e.g., if your site is example.com, this will allow *.example.com).', 'wpmu-security'),
             'required' => 0,
             'conditional_logic' => 0,
             'wrapper' => array(
@@ -86,7 +86,9 @@
                 'id' => '',
             ),
             'message' => __('<p><strong>Cross-Origin Resource Sharing (CORS)</strong> allows web pages from other domains to access resources on your site.</p>
-<p><strong>Subdomain Support:</strong> When enabled, all configured domains will automatically allow their subdomains (e.g., configuring "example.com" will also allow "sub.example.com").</p>
+<p><strong>Current Domain:</strong> The current domain is always allowed for CORS requests.</p>
+<p><strong>Allow Subdomains:</strong> When enabled, this adds wildcard subdomain support for the current domain (e.g., if your site is example.com, this will allow *.example.com).</p>
+<p><strong>Additional Origins:</strong> You can add additional trusted domains below that should be allowed to make CORS requests.</p>
 <p><strong>Security Note:</strong> Only add domains you trust. CORS origins allow other websites to make requests to your site on behalf of users.</p>', 'wpmu-security'),
             'new_lines' => 'wpautop',
             'esc_html' => 0,
