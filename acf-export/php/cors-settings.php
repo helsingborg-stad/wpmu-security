@@ -85,11 +85,28 @@
                 'class' => '',
                 'id' => '',
             ),
-            'message' => __('<p><strong>Cross-Origin Resource Sharing (CORS)</strong> allows web pages from other domains to access resources on your site.</p>
-<p><strong>Current Domain:</strong> The current domain is always allowed for CORS requests.</p>
-<p><strong>Allow Subdomains:</strong> When enabled, this adds wildcard subdomain support for the current domain (e.g., if your site is example.com, this will allow *.example.com).</p>
-<p><strong>Additional Origins:</strong> You can add additional trusted domains below that should be allowed to make CORS requests.</p>
-<p><strong>Security Note:</strong> Only add domains you trust. CORS origins allow other websites to make requests to your site on behalf of users.</p>', 'wpmu-security'),
+            'message' => __('<table class="widefat striped">
+    <thead>
+        <tr>
+            <th>Setting</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Cross-Origin Resource Sharing (CORS)</strong></td>
+            <td>Allows web pages from other domains to access resources on your site.</td>
+        </tr>
+        <tr>
+            <td><strong>Subdomain Support</strong></td>
+            <td>When enabled, all configured domains will automatically allow their subdomains (e.g., configuring <code>example.com</code> will also allow <code>sub.example.com</code>).</td>
+        </tr>
+        <tr>
+            <td><strong>Security Note</strong></td>
+            <td>Only add domains you trust. CORS origins allow other websites to make requests to your site on behalf of users.</td>
+        </tr>
+    </tbody>
+</table>', 'wpmu-security'),
             'new_lines' => 'wpautop',
             'esc_html' => 0,
         ),
