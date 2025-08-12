@@ -11,12 +11,15 @@ class ConnectSrcResolver implements DomainResolverInterface {
   public function __construct(private UrlInterface $urlHelper) {}
 
   public function resolve(DomWrapperInterface $dom): array {
-      return array_values(array_unique(
+      $domains = array_values(array_unique(
           array_merge(
               $this->getUrlsFromInlineScripts($dom),
               $this->getUrlsFromArbitraryAttributes($dom)
           )
       ));
+        $domains[] = 'ui.ungpd.com';
+        $domains[] = 'ui.ungapped.com';
+        return array_values(array_unique($domains));
   }
 
   private function getUrlsFromArbitraryAttributes($dom) {
