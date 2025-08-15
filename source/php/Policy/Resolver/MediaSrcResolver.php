@@ -23,6 +23,7 @@ class MediaSrcResolver implements DomainResolverInterface {
             }
         }
         $domains[] = "'self'";
+        $domains[] = "blob:";
         return array_values(array_filter(array_unique($domains)));
     }
 }

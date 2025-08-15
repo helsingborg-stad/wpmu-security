@@ -20,6 +20,8 @@ class ImgSrcResolver implements DomainResolverInterface {
         $inlineImages = $this->getImagesFromInlineScripts($dom);
         $domains = array_merge($images, $inlineImages);
         $domains[] = "data:";
+        $domains[] = "blob:";
+
         return array_values(array_filter(array_unique($domains)));
     }
 
