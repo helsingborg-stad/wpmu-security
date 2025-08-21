@@ -8,7 +8,11 @@ use WPMUSecurity\Config;
 class SubResourceIntegrity
 {
     private const VALID_EXTENSIONS = ['js', 'css'];
-    private const BLOCKED_HANDLES = ['wp-block-library', 'react-js', 'react-dom-js']; 
+    private const BLOCKED_HANDLES = [
+        'wp-block-library',
+        'react-js-js',
+        'react-dom-js'
+    ]; 
 
     public function __construct(private WpService $wpService, private Config $config){}
 
@@ -20,6 +24,7 @@ class SubResourceIntegrity
     public function addHooks()
     {
       $this->wpService->addFilter('wp_script_attributes', [$this, 'addSriToScript']);
+      $this->wpService->addFilter('style_loader_tag', [$this, 'addSriToStyle'], 10, 4);
     }
 
     /**
@@ -51,6 +56,36 @@ class SubResourceIntegrity
             $attributes['crossorigin'] = 'anonymous';
         }
         return $attributes;
+    }
+
+    /**
+     * Adds Subresource Integrity (SRI) attributes to style tags.
+     *
+     * @param string $tag The HTML tag for the style.
+     * @param string $handle The handle of the style.
+     * @param string $href The href URL of the style.
+     * @param string|null $media Optional media attribute for the style.
+     * @return string The modified HTML tag with SRI attributes.
+     */
+    public function addSriToStyle(string $tag, string $handle, string $href, ?string $media = null): string
+    {
+        if (in_array($handle, self::BLOCKED_HANDLES, true)) {
+            return $tag;
+        }
+
+        if (strpos($tag, 'integrity=') !== false) {
+            return $tag;
+        }
+
+        if($this->wpService->isAdmin()) {
+            return $tag;
+        }
+
+        $integrity = $this->maybeGetCachedIntegrityHash($href);
+        if ($integrity) {
+          $tag = str_replace(' href=', ' integrity="' . esc_attr($integrity) . '" crossorigin="anonymous" href=', $tag);
+        }
+        return $tag;
     }
 
     /**
