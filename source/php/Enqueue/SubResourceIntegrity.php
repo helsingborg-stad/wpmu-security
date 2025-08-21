@@ -34,7 +34,11 @@ class SubResourceIntegrity
         $src    = $attributes['src'] ?? '';
 
         if (in_array($id, self::BLOCKED_HANDLES, true)) {
-            return $attributes; // Skip adding SRI for blocked handles, not possible to create sri that stays valid.
+            return $attributes;
+        }
+
+        if($attributes['integrity'] ?? false) {
+            return $attributes;
         }
 
         if($this->wpService->isAdmin()) {
