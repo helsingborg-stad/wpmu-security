@@ -8,7 +8,11 @@ use WPMUSecurity\Config;
 class SubResourceIntegrity
 {
     private const VALID_EXTENSIONS = ['js', 'css'];
-    private const BLOCKED_HANDLES = ['wp-block-library', 'react-js', 'react-dom-js']; 
+    private const BLOCKED_HANDLES = [
+        'wp-block-library',
+        'react-js-js',
+        'react-dom-js'
+    ]; 
 
     public function __construct(private WpService $wpService, private Config $config){}
 
@@ -19,32 +23,39 @@ class SubResourceIntegrity
      */
     public function addHooks()
     {
-      $this->wpService->addFilter('script_loader_tag', [$this, 'addSriToScript'], 10, 3);
+      $this->wpService->addFilter('wp_script_attributes', [$this, 'addSriToScript']);
       $this->wpService->addFilter('style_loader_tag', [$this, 'addSriToStyle'], 10, 4);
     }
 
     /**
      * Adds Subresource Integrity (SRI) attributes to script tags.
      *
-     * @param string $tag The HTML tag for the script or style.
-     * @param string $handle The handle of the script or style.
-     * @param string $src The source URL of the script or style.
-     * @return string The modified HTML tag with SRI attributes.
+     * @param array $attributes The attributes for the script tag.
+     * @return array The modified attributes with SRI attributes.
      */
-    public function addSriToScript(string $tag, string $handle, string $src): string
+    public function addSriToScript(array $attributes): array
     {
-        if (in_array($handle, self::BLOCKED_HANDLES, true)) {
-            return $tag; // Skip adding SRI for blocked handles, not possible to create sri that stays valid.
+        $id     = $attributes['id'] ?? '';
+        $src    = $attributes['src'] ?? '';
+
+        if (in_array($id, self::BLOCKED_HANDLES, true)) {
+            return $attributes;
+        }
+
+        if($attributes['integrity'] ?? false) {
+            return $attributes;
         }
 
         if($this->wpService->isAdmin()) {
-            return $tag;
+            return $attributes;
         }
         $integrity = $this->maybeGetCachedIntegrityHash($src);
+
         if ($integrity) {
-            $tag = str_replace(' src=', ' integrity="' . esc_attr($integrity) . '" crossorigin="anonymous" src=', $tag);
+            $attributes['integrity'] = esc_attr($integrity);
+            $attributes['crossorigin'] = 'anonymous';
         }
-        return $tag;
+        return $attributes;
     }
 
     /**
@@ -59,7 +70,11 @@ class SubResourceIntegrity
     public function addSriToStyle(string $tag, string $handle, string $href, ?string $media = null): string
     {
         if (in_array($handle, self::BLOCKED_HANDLES, true)) {
-            return $tag; // Skip adding SRI for blocked handles, not possible to create sri that stays valid.
+            return $tag;
+        }
+
+        if (strpos($tag, 'integrity=') !== false) {
+            return $tag;
         }
 
         if($this->wpService->isAdmin()) {
