@@ -49,7 +49,8 @@ class PluginActivation implements HookableInterface
      */
     private function addHtaccessRules(): void
     {
-        $htaccessFile = ABSPATH . '.htaccess';
+        include_once(ABSPATH . 'wp-admin/includes/file.php');
+        $htaccessFile = get_home_path() . '.htaccess';
 
         if (!is_writable($htaccessFile)) {
             $this->wpService->doAction('wpmu_security_htaccess_not_writable', $htaccessFile);
