@@ -12,7 +12,7 @@ class MediaSrcResolver implements DomainResolverInterface {
 
     public function resolve(DomWrapperInterface $dom): array {
         $domains = [];
-        foreach ($dom->query('//video/source[@src] | //audio/source[@src]') as $node) {
+        foreach ($dom->query('//video[@src] | //video/source[@src] | //audio[@src] | //audio/source[@src]') as $node) {
             if (!$node instanceof \DOMElement) {
               continue;
             }
