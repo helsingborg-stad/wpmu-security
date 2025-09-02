@@ -22,6 +22,13 @@ class ImgSrcResolver implements DomainResolverInterface {
         $domains[] = "data:";
         $domains[] = "blob:";
 
+        // Add all Carto basemaps subdomains
+        $domains[] = "a.basemaps.cartocdn.com";
+        $domains[] = "b.basemaps.cartocdn.com";
+        $domains[] = "c.basemaps.cartocdn.com";
+        $domains[] = "d.basemaps.cartocdn.com";
+        $domains[] = "*.helsingborg.se";
+
         return array_values(array_filter(array_unique($domains)));
     }
 
