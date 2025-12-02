@@ -185,14 +185,24 @@ class WPMUSecurity
    *
    * @return void
    */
-  private function autoload()
-  {
-    if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-      require __DIR__ . '/vendor/autoload.php';
-    } else {
-      throw new \Exception('Autoload file not found. Please run `composer install` to generate it.');
+    private function autoload()
+    {
+        $localVendor = __DIR__ . '/vendor/autoload.php';
+        if (file_exists($localVendor)) {
+            require $localVendor;
+            return;
+        }
+
+        $rootVendor  = dirname(__DIR__, 3) . '/vendor/autoload.php';
+        if (file_exists($rootVendor)) {
+            require $rootVendor;
+            return;
+        }
+
+        throw new \Exception(
+            'Autoload file not found. Please run `composer install` either in the plugin directory or project root.'
+        );
     }
-  }
 
   private function loadTranslations($wpService)
   {
