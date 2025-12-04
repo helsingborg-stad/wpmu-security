@@ -8,7 +8,7 @@ use WPMUSecurity\Config;
 class SubResourceIntegrity
 {
     private const VALID_EXTENSIONS = ['js', 'css'];
-    private const BLOCKED_HANDLES = ['wp-block-library', 'react-js', 'react-dom-js']; 
+    private const BLOCKED_HANDLES = ['wp-block-library', 'react-js', 'react-dom-js', 'admin-bar', 'dashicons']; 
 
     public function __construct(private WpService $wpService, private Config $config){}
 
