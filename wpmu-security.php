@@ -189,8 +189,6 @@ class WPMUSecurity
   {
     if (file_exists(__DIR__ . '/vendor/autoload.php')) {
       require __DIR__ . '/vendor/autoload.php';
-    } else {
-      throw new \Exception('Autoload file not found. Please run `composer install` to generate it.');
     }
   }
 
