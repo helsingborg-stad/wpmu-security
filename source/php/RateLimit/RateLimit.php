@@ -50,7 +50,11 @@ class RateLimit
           return new WP_Error(
               'rate_limit_exceeded',
               $this->wpService->__('Too many requests. Please try again later.', 'wpmu-security'),
-              ['status' => 429]
+              [
+                'status'       => 429,
+                'retry_after'  => $this->timeWindow,
+                'max_requests' => $this->maxRequests,
+              ]
             );
         }
         return null;
