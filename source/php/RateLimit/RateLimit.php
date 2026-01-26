@@ -20,6 +20,10 @@ use WpService\WpService;
  */
 class RateLimit
 {
+    private int $maxRequests;
+    private int $timeWindow;
+    private string $key;
+
     public function __construct(
         private WpService $wpService,
         private Config $config
@@ -37,8 +41,12 @@ class RateLimit
      */
     public function init(int $maxRequests, int $timeWindow, string $key): ?WP_Error
     {
+        $this->maxRequests = $maxRequests;
+        $this->timeWindow  = $timeWindow;
+        $this->key         = $key;
+
         $identifier = $this->getRateLimitIdentifier();
-        if ($this->isRateLimited($identifier, $key)) {
+        if ($this->isRateLimited($identifier, $this->key)) {
           return new WP_Error(
               'rate_limit_exceeded',
               $this->wpService->__('Too many requests. Please try again later.', 'wpmu-security'),
@@ -57,7 +65,6 @@ class RateLimit
      */
     private function isRateLimited(string $identifier, string $action): bool
     {
-        $config    = $this->config->getRateLimitSettings();
         $cacheKey  = $this->getCacheKey($identifier, $action);
         $cacheData = $this->initializeCacheData($cacheKey, $config);
         $cacheData = $this->resetCacheIfExpired($cacheData, $config);
@@ -71,8 +78,8 @@ class RateLimit
         $this->wpService->wpCacheSet(
             $cacheKey,
             $cacheData,
-            $config['cache_group'],
-            $config['time_window']
+            $this->key,
+            $this->timeWindow
         );
 
         return false;
@@ -81,13 +88,13 @@ class RateLimit
     /**
      * Initialize cache data if not present
      */
-    private function initializeCacheData(string $cacheKey, array $config): array
+    private function initializeCacheData(string $cacheKey): array
     {
-        $cacheData = $this->wpService->wpCacheGet($cacheKey, $config['cache_group']);
+        $cacheData = $this->wpService->wpCacheGet($cacheKey, $this->key);
         if ($cacheData === false) {
             $cacheData = [
                 'count' => 0,
-                'expires' => time() + $config['time_window']
+                'expires' => time() + $this->timeWindow
             ];
         }
         return $cacheData;
@@ -96,12 +103,12 @@ class RateLimit
     /**
      * Reset cache data if expired
      */
-    private function resetCacheIfExpired(array $cacheData, array $config): array
+    private function resetCacheIfExpired(array $cacheData): array
     {
         if ($cacheData['expires'] <= time()) {
             $cacheData = [
                 'count' => 0,
-                'expires' => time() + $config['time_window']
+                'expires' => time() + $this->timeWindow
             ];
         }
         return $cacheData;
@@ -110,15 +117,15 @@ class RateLimit
     /**
      * Check if submission limit is exceeded and log if so
      */
-    private function hasExceededLimit(array $cacheData, array $config, string $identifier, string $action): bool
+    private function hasExceededLimit(array $cacheData, string $identifier, string $action): bool
     {
-        if ($cacheData['count'] >= $config['submission_limit']) {
+        if ($cacheData['count'] >= $this->maxRequests) {
             // Log rate limit event for monitoring
             $this->wpService->doAction('modularity_frontend_form_rate_limit_exceeded', [
                 'identifier' => $identifier,
                 'action' => $action,
                 'count' => $cacheData['count'],
-                'limit' => $config['submission_limit']
+                'limit' => $this->maxRequests
             ]);
             return true;
         }
