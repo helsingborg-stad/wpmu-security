@@ -47,6 +47,22 @@ class WPMUSecurity
     $this->setupContentSecurityPolicy($wpService, $config);
     $this->setupPermissionsPolicy($wpService);
     $this->setUpAdminOptionsPage($wpService, $acfService);
+    $this->setupRateLimiting($wpService, $config);
+  }
+
+  /**
+   * Feature: Rate Limiting
+   * This feature adds rate limiting to form submissions to prevent abuse and DoS attacks.
+   * It checks if the rate limiting is already set up to avoid duplicates.
+   *
+   * @return void
+   */  public function setupRateLimiting($wpService, $config)
+  {
+    $rateLimit = new \WPMUSecurity\RateLimit\RateLimit($wpService, $config);
+    new \WPMUSecurity\RateLimit\Api\RateLimitPostRequest(
+      $wpService,
+      $rateLimit
+    );
   }
 
   /**
