@@ -29,19 +29,17 @@ class RateLimit
     /**
      * @inheritDoc
      */
-    public function validate(array $data, WP_REST_Request $request)
+    public function init(int $maxRequests, int $timeWindow, string $key): ?WP_Error
     {
         $identifier = $this->getRateLimitIdentifier();
-        $action = 'submit_form';
-        
         if ($this->isRateLimited($identifier, $action)) {
-            new WP_Error(
+          return new WP_Error(
               'rate_limit_exceeded',
               $this->wpService->__('Too many requests. Please try again later.', 'wpmu-security'),
               ['status' => 429]
             );
         }
-        
+        return null;
     }
 
     /**
@@ -53,8 +51,8 @@ class RateLimit
      */
     private function isRateLimited(string $identifier, string $action): bool
     {
-        $config = $this->config->getRateLimitSettings();
-        $cacheKey = $this->getCacheKey($identifier, $action);
+        $config    = $this->config->getRateLimitSettings();
+        $cacheKey  = $this->getCacheKey($identifier, $action);
         $cacheData = $this->initializeCacheData($cacheKey, $config);
         $cacheData = $this->resetCacheIfExpired($cacheData, $config);
 

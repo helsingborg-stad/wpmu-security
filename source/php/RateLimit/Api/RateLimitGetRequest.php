@@ -12,10 +12,10 @@ use WP_REST_Server;
 class RateLimitPostRequest implements HookableInterface
 {
   /**
-   * Allow maximum 50 requests per 5 minutes towards any given POST endpoint.
+   * Allow maximum 500 requests per 5 minutes towards any given GET endpoint.
    * 
    */
-  private const MAX_REQUESTS = 50;
+  private const MAX_REQUESTS = 500;
   private const TIME_WINDOW  = 300;
 
   /**
@@ -48,7 +48,7 @@ class RateLimitPostRequest implements HookableInterface
    */
   public function rateLimitRequest($result,  WP_REST_Server $server, WP_REST_Request $request)
   {
-      if($request->get_method() !== 'POST' && $request->get_method() !== 'PUT' && $request->get_method() !== 'OPTIONS') {
+      if($request->get_method() !== 'GET' && $request->get_method() !== 'OPTIONS') {
           return $result;
       }
       $isBlocked = $this->rateLimit->init(self::MAX_REQUESTS, self::TIME_WINDOW, $request->get_route());
