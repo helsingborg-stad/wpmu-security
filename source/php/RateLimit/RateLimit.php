@@ -27,12 +27,18 @@ class RateLimit
     }
 
     /**
-     * @inheritDoc
+     * Initialize rate limiting check, returns WP_Error if rate limit exceeded
+     * 
+     * @param int $maxRequests Maximum allowed requests within the time window
+     * @param int $timeWindow Time window in seconds
+     * @param string $key Unique key for the action being rate limited
+     * 
+     * @return WP_Error|null WP_Error if rate limit exceeded, null otherwise
      */
     public function init(int $maxRequests, int $timeWindow, string $key): ?WP_Error
     {
         $identifier = $this->getRateLimitIdentifier();
-        if ($this->isRateLimited($identifier, $action)) {
+        if ($this->isRateLimited($identifier, $key)) {
           return new WP_Error(
               'rate_limit_exceeded',
               $this->wpService->__('Too many requests. Please try again later.', 'wpmu-security'),

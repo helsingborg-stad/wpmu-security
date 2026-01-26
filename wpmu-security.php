@@ -15,7 +15,7 @@
 namespace WPMUSecurity;
 
 use AcfService\Implementations\NativeAcfService;
-use WpService\Implementations\NativeWpService;
+use WpService\Implementations\NativeWpService; 
 
 if (! defined('WPINC')) {
     die;
@@ -59,10 +59,12 @@ class WPMUSecurity
    */  public function setupRateLimiting($wpService, $config)
   {
     $rateLimit = new \WPMUSecurity\RateLimit\RateLimit($wpService, $config);
-    new \WPMUSecurity\RateLimit\Api\RateLimitPostRequest(
-      $wpService,
-      $rateLimit
-    );
+    
+    $rateLimitPostRequest = new \WPMUSecurity\RateLimit\Api\RateLimitPostRequest($wpService, $rateLimit);
+    $rateLimitPostRequest->addHooks();
+
+    $rateLimitGetRequest = new \WPMUSecurity\RateLimit\Api\RateLimitGetRequest($wpService, $rateLimit);
+    $rateLimitGetRequest->addHooks();
   }
 
   /**

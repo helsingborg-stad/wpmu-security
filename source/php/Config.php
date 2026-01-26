@@ -23,25 +23,6 @@ class Config
   }
 
   /**
-   * Get rate limit settings.
-   *
-   * @return array
-   */
-  public function getRateLimitSettings():array
-  {
-    $defaultSettings = [
-      'submission_limit' => 10,
-      'time_window' => 3600,
-      'cache_group' => 'modularity_frontend_form_rate_limit',
-    ];
-
-    return $this->wpService->applyFilters(
-      $this->createFilterKey(__FUNCTION__),
-      $defaultSettings
-    );
-  }
-
-  /**
    * Get the filter prefix.
    * 
    * @return string

@@ -1,6 +1,6 @@
 <?php
 
-namespace WPMU\Security\RateLimit\Api;
+namespace WPMUSecurity\RateLimit\Api;
 
 use WPMUSecurity\HookableInterface;
 use WP_REST_Request;

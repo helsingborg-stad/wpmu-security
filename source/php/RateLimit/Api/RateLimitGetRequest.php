@@ -1,6 +1,6 @@
 <?php
 
-namespace WPMU\Security\RateLimit\Api;
+namespace WPMUSecurity\RateLimit\Api;
 
 use WPMUSecurity\HookableInterface;
 use WP_REST_Request;
@@ -9,14 +9,14 @@ use WP_Error;
 use WpService\WpService;
 use WP_REST_Server;
 
-class RateLimitPostRequest implements HookableInterface
+class RateLimitGetRequest implements HookableInterface
 {
   /**
-   * Allow maximum 500 requests per 5 minutes towards any given GET endpoint.
+   * Allow maximum 600 requests per 10 minutes towards any given GET endpoint.
    * 
    */
-  private const MAX_REQUESTS = 500;
-  private const TIME_WINDOW  = 300;
+  private const MAX_REQUESTS = 600;
+  private const TIME_WINDOW  = 600;
 
   /**
    * Constructor
