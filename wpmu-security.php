@@ -31,7 +31,7 @@ class WPMUSecurity
     //Services
     $wpService  = new NativeWpService();
     $acfService = new NativeAcfService();
-    $config     = new \WPMUSecurity\Config($wpService);
+    $config     = new \WPMUSecurity\Config('WPSecurity/', $wpService);
 
     //Translations
     $this->loadTranslations($wpService);

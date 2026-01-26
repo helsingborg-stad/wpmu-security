@@ -4,6 +4,7 @@ namespace WPMUSecurity\RateLimit;
 
 use WPMUSecurity\Config;
 use WpService\WpService;
+use WP_Error;
 
 /**
  * Rate limit validator to prevent abuse and DoS attacks
@@ -70,10 +71,11 @@ class RateLimit
     private function isRateLimited(string $identifier, string $action): bool
     {
         $cacheKey  = $this->getCacheKey($identifier, $action);
-        $cacheData = $this->initializeCacheData($cacheKey, $config);
-        $cacheData = $this->resetCacheIfExpired($cacheData, $config);
+        $cacheData = $this->initializeCacheData($cacheKey);
+        $cacheData = $this->resetCacheIfExpired($cacheData);
 
-        if ($this->hasExceededLimit($cacheData, $config, $identifier, $action)) {
+
+        if ($this->hasExceededLimit($cacheData, $identifier, $action)) {
             return true;
         }
 
@@ -178,6 +180,7 @@ class RateLimit
             $ip = $_SERVER['HTTP_X_REAL_IP'];
         } else {
             $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        }
         if (filter_var($ip, FILTER_VALIDATE_IP)) {
             return $ip;
         }
