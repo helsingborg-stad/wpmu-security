@@ -8,7 +8,7 @@ use WPMUSecurity\RateLimit\RateLimit;
 use WP_Error;
 use WpService\WpService;
 use WP_REST_Server;
-
+use WPMUSecurity\Config;
 class RateLimitGetRequest implements HookableInterface
 {
   /**
@@ -24,7 +24,7 @@ class RateLimitGetRequest implements HookableInterface
    * @param WpService $wpService
    * @param RateLimit $rateLimit
    */
-  public function __construct(private WpService $wpService, private RateLimit $rateLimit){}
+  public function __construct(private WpService $wpService, private RateLimit $rateLimit, private Config $config){}
 
   /**
    * Register the rate limit endpoint.
@@ -51,7 +51,17 @@ class RateLimitGetRequest implements HookableInterface
       if($request->get_method() !== 'GET' && $request->get_method() !== 'OPTIONS') {
           return $result;
       }
-      $isBlocked = $this->rateLimit->init(self::MAX_REQUESTS, self::TIME_WINDOW, $request->get_route());
+
+      $maxRequests = $this->wpService->applyFilters(
+        $this->config->createFilterKey('RateLimit/Api/GET/MaxRequests'), 
+        self::MAX_REQUESTS
+      );
+      $timeWindow  = $this->wpService->applyFilters(
+        $this->config->createFilterKey('RateLimit/Api/GET/TimeWindow'), 
+        self::TIME_WINDOW
+      );
+
+      $isBlocked = $this->rateLimit->init($maxRequests, $timeWindow, $request->get_route());
       if ($isBlocked instanceof WP_Error) {
           return $isBlocked;
       }

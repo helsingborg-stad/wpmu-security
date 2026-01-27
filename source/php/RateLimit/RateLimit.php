@@ -74,7 +74,6 @@ class RateLimit
         $cacheData = $this->initializeCacheData($cacheKey);
         $cacheData = $this->resetCacheIfExpired($cacheData);
 
-
         if ($this->hasExceededLimit($cacheData, $identifier, $action)) {
             return true;
         }

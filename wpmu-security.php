@@ -53,17 +53,17 @@ class WPMUSecurity
   /**
    * Feature: Rate Limiting
    * This feature adds rate limiting to form submissions to prevent abuse and DoS attacks.
-   * It checks if the rate limiting is already set up to avoid duplicates.
    *
    * @return void
-   */  public function setupRateLimiting($wpService, $config)
+   */  
+  public function setupRateLimiting($wpService, $config)
   {
     $rateLimit = new \WPMUSecurity\RateLimit\RateLimit($wpService, $config);
     
-    $rateLimitPostRequest = new \WPMUSecurity\RateLimit\Api\RateLimitPostRequest($wpService, $rateLimit);
+    $rateLimitPostRequest = new \WPMUSecurity\RateLimit\Api\RateLimitPostRequest($wpService, $rateLimit, $config);
     $rateLimitPostRequest->addHooks();
 
-    $rateLimitGetRequest = new \WPMUSecurity\RateLimit\Api\RateLimitGetRequest($wpService, $rateLimit);
+    $rateLimitGetRequest = new \WPMUSecurity\RateLimit\Api\RateLimitGetRequest($wpService, $rateLimit, $config);
     $rateLimitGetRequest->addHooks();
   }
 
