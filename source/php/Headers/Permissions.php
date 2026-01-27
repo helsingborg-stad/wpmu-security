@@ -32,7 +32,7 @@ class Permissions
         }
       }
       if (!headers_sent()) {
-        header('Permissions-Policy: autoplay=("self"), fullscreen=("self"), microphone=(), camera=(), geolocation=("self"), payment=();');
+        header('Permissions-Policy: autoplay=(self), fullscreen=(self), microphone=(), camera=(), geolocation=(self), payment=()');
       }      
     }
 }
