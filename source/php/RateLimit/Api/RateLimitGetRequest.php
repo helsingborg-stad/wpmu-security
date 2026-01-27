@@ -16,7 +16,7 @@ class RateLimitGetRequest implements HookableInterface
    * 
    */
   private const MAX_REQUESTS = 600;
-  private const TIME_WINDOW  = 600;
+  private const TIME_WINDOW  = 300;
 
   /**
    * Constructor
