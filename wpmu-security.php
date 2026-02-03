@@ -46,6 +46,7 @@ class WPMUSecurity
     $this->setupCommentSanitization($wpService);
     $this->setupContentSecurityPolicy($wpService, $config);
     $this->setupPermissionsPolicy($wpService);
+    $this->setupPluginActivation($wpService);
     $this->setUpAdminOptionsPage($wpService, $acfService);
   }
 
@@ -178,6 +179,18 @@ class WPMUSecurity
   {
     $permissions = new \WPMUSecurity\Headers\Permissions($wpService);
     $permissions->addHooks();
+  }
+
+  /**
+   * Feature: Plugin Activation
+   * This feature handles plugin activation tasks, including .htaccess modifications for LiteSpeed cache integration.
+   *
+   * @return void
+   */
+  private function setupPluginActivation($wpService)
+  {
+    $pluginActivation = new \WPMUSecurity\Setup\PluginActivation($wpService);
+    $pluginActivation->addHooks();
   }
 
   /**
