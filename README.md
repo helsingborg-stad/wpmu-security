@@ -13,6 +13,7 @@ A lightweight WordPress plugin focused on modern security hardening best practic
 - ✅ Comment sanitization (anti-XSS)
 - ✅ Content Security Policy (CSP)
 - ✅ **Custom port number support** (development environments, custom setups)
+- ✅ Api Rate Limiter
 
 ## ⚙️ Configuration
 

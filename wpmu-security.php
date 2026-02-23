@@ -15,7 +15,7 @@
 namespace WPMUSecurity;
 
 use AcfService\Implementations\NativeAcfService;
-use WpService\Implementations\NativeWpService;
+use WpService\Implementations\NativeWpService; 
 
 if (! defined('WPINC')) {
     die;
@@ -31,7 +31,7 @@ class WPMUSecurity
     //Services
     $wpService  = new NativeWpService();
     $acfService = new NativeAcfService();
-    $config     = new \WPMUSecurity\Config($wpService);
+    $config     = new \WPMUSecurity\Config('WPSecurity/', $wpService);
 
     //Translations
     $this->loadTranslations($wpService);
@@ -47,6 +47,24 @@ class WPMUSecurity
     $this->setupContentSecurityPolicy($wpService, $config);
     $this->setupPermissionsPolicy($wpService);
     $this->setUpAdminOptionsPage($wpService, $acfService);
+    $this->setupRateLimiting($wpService, $config);
+  }
+
+  /**
+   * Feature: Rate Limiting
+   * This feature adds rate limiting to form submissions to prevent abuse and DoS attacks.
+   *
+   * @return void
+   */  
+  public function setupRateLimiting($wpService, $config)
+  {
+    $rateLimit = new \WPMUSecurity\RateLimit\RateLimit($wpService, $config);
+    
+    $rateLimitPostRequest = new \WPMUSecurity\RateLimit\Api\RateLimitPostRequest($wpService, $rateLimit, $config);
+    $rateLimitPostRequest->addHooks();
+
+    $rateLimitGetRequest = new \WPMUSecurity\RateLimit\Api\RateLimitGetRequest($wpService, $rateLimit, $config);
+    $rateLimitGetRequest->addHooks();
   }
 
   /**

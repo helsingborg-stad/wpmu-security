@@ -1,0 +1,72 @@
+<?php
+
+namespace WPMUSecurity\RateLimit\Api;
+
+use WPMUSecurity\HookableInterface;
+use WP_REST_Request;
+use WPMUSecurity\RateLimit\RateLimit;
+use WP_Error;
+use WpService\WpService;
+use WP_REST_Server;
+use WPMUSecurity\Config;
+
+class RateLimitPostRequest implements HookableInterface
+{
+  /**
+   * Allow maximum 50 requests per 5 minutes towards any given POST endpoint.
+   * 
+   */
+  private const MAX_REQUESTS = 50;
+  private const TIME_WINDOW  = 300;
+
+  /**
+   * Constructor
+   *
+   * @param WpService $wpService
+   * @param RateLimit $rateLimit
+   */
+  public function __construct(private WpService $wpService, private RateLimit $rateLimit, private Config $config){}
+
+  /**
+   * Register the rate limit endpoint.
+   *
+   * @return void
+   */
+  public function addHooks(): void
+  {
+    $this->wpService->addFilter(
+      'rest_pre_dispatch',
+      [$this, 'rateLimitRequest'],
+      10, 
+      3
+    );
+  }
+
+  /**
+   * Register the rate limit.
+   *
+   * @return void
+   */
+  public function rateLimitRequest($result,  WP_REST_Server $server, WP_REST_Request $request)
+  {
+      if($request->get_method() !== 'POST' && $request->get_method() !== 'PUT' && $request->get_method() !== 'OPTIONS') {
+          return $result;
+      }
+
+      $maxRequests = $this->wpService->applyFilters(
+        $this->config->createFilterKey('RateLimit/Api/POST/MaxRequests'), 
+        self::MAX_REQUESTS
+      );
+      $timeWindow  = $this->wpService->applyFilters(
+        $this->config->createFilterKey('RateLimit/Api/POST/TimeWindow'), 
+        self::TIME_WINDOW
+      );
+
+      $isBlocked = $this->rateLimit->init($maxRequests, $timeWindow, $request->get_route());
+      if ($isBlocked instanceof WP_Error) {
+          return $isBlocked;
+      }
+
+      return $result;
+  }
+}

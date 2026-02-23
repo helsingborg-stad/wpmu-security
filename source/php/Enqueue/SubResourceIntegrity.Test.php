@@ -20,7 +20,7 @@ class SubResourceIntegrityTest extends TestCase
             'getHomeUrl' => 'http://localhost:8080',
             'includesUrl' => 'http://localhost:8080/wp-includes/',
         ]);
-        $this->config = new Config();
+        $this->config = new Config('WPSecurity/', $this->wpService);
         $this->sri = new SubResourceIntegrity($this->wpService, $this->config);
     }
 
