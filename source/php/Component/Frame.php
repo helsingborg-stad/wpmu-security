@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace WPMUSecurity\Component;
 
 use AcfService\AcfService;
@@ -25,13 +27,13 @@ class Frame
         $this->wpService->addFilter('ComponentLibrary/Component/Iframe/DisplayAcceptance', [$this, 'displayAcceptance'], 10, 1);
     }
 
-    public function displayAcceptance($url)
+    public function displayAcceptance($srcURL): bool
     {
-        $domains = $this->acfService->getField(self::ACF_OPTION_BYPASS_ACCEPTANCE, 'option', false);
-        if (is_array($domains)) {
-            foreach ($domains as $domain) {
-                $parts = parse_url($domain[self::ACF_BYPASS_KEY]);
-                if ($parts['host'] === $domain) {
+        $whiteList = $this->acfService->getField(self::ACF_OPTION_BYPASS_ACCEPTANCE, 'option', false);
+        if (is_array($whiteList)) {
+            $srcHost = parse_url($srcURL, PHP_URL_HOST);
+            foreach ($whiteList as $row) {
+                if ($srcHost === $row[self::ACF_BYPASS_KEY]) {
                     return false;
                 }
             }
