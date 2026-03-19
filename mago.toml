@@ -24,6 +24,12 @@ ambiguous-function-call = { enabled = false }
 literal-named-argument = { enabled = false }
 halstead = { effort-threshold = 7000 }
 
+no-empty = { level = "warning" }
+no-error-control-operator = { level = "warning" }
+too-many-methods = { level = "warning" }
+kan-defect = { level = "warning" }
+cyclomatic-complexity = { level = "warning" }
+
 [analyzer]
 find-unused-definitions = true
 find-unused-expressions = false
