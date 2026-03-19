@@ -6,7 +6,10 @@
     "scripts": {
         "test": "./vendor/bin/phpunit --testdox",
         "test:coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testdox",
-        "minimal": "./vendor/bin/phpunit"
+        "minimal": "./vendor/bin/phpunit",
+        "lint": "vendor/bin/mago lint",
+        "fix": "vendor/bin/mago lint --format-after-fix --fix",
+        "format": "vendor/bin/mago fmt"
     },
     "authors": [
         {
@@ -29,7 +32,16 @@
         "brain/monkey": "^2.6",
         "codedungeon/phpunit-result-printer": "^0.31.0",
         "phpunit/phpunit": "^9.5",
-        "php-stubs/wordpress-stubs": "^6.8"
+        "php-stubs/wordpress-stubs": "^6.8",
+        "carthage-software/mago": "^1.14.1"
+    },
+    "suggest": {
+        "helsingborg-stad/municipio": "^6.0.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "carthage-software/mago": true
+        }
     },
     "version": "1.9.0"
 }

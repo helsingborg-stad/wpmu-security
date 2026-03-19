@@ -63,6 +63,8 @@
                     'allow_custom' => 0,
                     'search_placeholder' => '',
                     'parent_repeater' => 'field_686794bf6725d',
+                    'create_options' => 0,
+                    'save_options' => 0,
                 ),
                 1 => array(
                     'key' => 'field_68679bef9922a',
@@ -150,6 +152,52 @@
             'new_lines' => 'wpautop',
             'esc_html' => 0,
         ),
+        2 => array(
+            'key' => 'field_69ba7a05e80fb',
+            'label' => __('Bypass user-accept before loading frame', 'wpmu-security'),
+            'name' => 'security_csp_bypass_user_accept',
+            'aria-label' => '',
+            'type' => 'repeater',
+            'instructions' => '',
+            'required' => 0,
+            'conditional_logic' => 0,
+            'wrapper' => array(
+                'width' => '',
+                'class' => '',
+                'id' => '',
+            ),
+            'layout' => 'row',
+            'pagination' => 0,
+            'min' => 0,
+            'max' => 0,
+            'collapsed' => '',
+            'button_label' => __('Add Row', 'wpmu-security'),
+            'rows_per_page' => 20,
+            'sub_fields' => array(
+                0 => array(
+                    'key' => 'field_69ba7a3ae80fc',
+                    'label' => __('Domain', 'wpmu-security'),
+                    'name' => 'domain',
+                    'aria-label' => '',
+                    'type' => 'text',
+                    'instructions' => '',
+                    'required' => 1,
+                    'conditional_logic' => 0,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                    'default_value' => '',
+                    'maxlength' => 255,
+                    'allow_in_bindings' => 1,
+                    'placeholder' => '',
+                    'prepend' => '',
+                    'append' => '',
+                    'parent_repeater' => 'field_69ba7a05e80fb',
+                ),
+            ),
+        ),
     ),
     'location' => array(
         0 => array(
@@ -169,13 +217,6 @@
     'active' => true,
     'description' => '',
     'show_in_rest' => 0,
-    'acfe_display_title' => '',
-    'acfe_autosync' => array(
-        0 => 'php',
-        1 => 'json',
-    ),
-    'acfe_form' => 0,
-    'acfe_meta' => '',
-    'acfe_note' => '',
+    'display_title' => '',
 ));
 }

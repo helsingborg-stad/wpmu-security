@@ -59,7 +59,9 @@
                     "placeholder": "",
                     "allow_custom": 0,
                     "search_placeholder": "",
-                    "parent_repeater": "field_686794bf6725d"
+                    "parent_repeater": "field_686794bf6725d",
+                    "create_options": 0,
+                    "save_options": 0
                 },
                 {
                     "key": "field_68679bef9922a",
@@ -101,6 +103,52 @@
             "message": "<table class=\"widefat striped\">\r\n  <thead>\r\n    <tr>\r\n      <th>Directive<\/th>\r\n      <th>Description<\/th>\r\n    <\/tr>\r\n  <\/thead>\r\n  <tbody>\r\n    <tr>\r\n      <td><code>script-src<\/code><\/td>\r\n      <td>Allow JavaScript to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>style-src<\/code><\/td>\r\n      <td>Allow CSS stylesheets to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>img-src<\/code><\/td>\r\n      <td>Allow images to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>media-src<\/code><\/td>\r\n      <td>Allow audio and video to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>frame-src<\/code><\/td>\r\n      <td>Allow content in iframes to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>object-src<\/code><\/td>\r\n      <td>Allow embedded objects (e.g. Flash, PDFs) to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>form-action<\/code><\/td>\r\n      <td>Allow forms to submit to these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>font-src<\/code><\/td>\r\n      <td>Allow fonts to load from these domains.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td><code>connect-src<\/code><\/td>\r\n      <td>Allow connections (e.g. XHR, WebSocket, APIs) to these domains.<\/td>\r\n    <\/tr>\r\n  <\/tbody>\r\n<\/table>",
             "new_lines": "wpautop",
             "esc_html": 0
+        },
+        {
+            "key": "field_69ba7a05e80fb",
+            "label": "Bypass user-accept before loading frame",
+            "name": "security_csp_bypass_user_accept",
+            "aria-label": "",
+            "type": "repeater",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "row",
+            "pagination": 0,
+            "min": 0,
+            "max": 0,
+            "collapsed": "",
+            "button_label": "Add Row",
+            "rows_per_page": 20,
+            "sub_fields": [
+                {
+                    "key": "field_69ba7a3ae80fc",
+                    "label": "Domain",
+                    "name": "domain",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 255,
+                    "allow_in_bindings": 1,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_69ba7a05e80fb"
+                }
+            ]
         }
     ],
     "location": [
@@ -121,13 +169,6 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "acfe_display_title": "",
-    "acfe_autosync": [
-        "php",
-        "json"
-    ],
-    "acfe_form": 0,
-    "acfe_meta": "",
-    "acfe_note": ""
+    "display_title": ""
 }]
 
