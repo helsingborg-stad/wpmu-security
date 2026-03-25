@@ -27,13 +27,13 @@ class Frame
         $this->wpService->addFilter('ComponentLibrary/Component/Iframe/DisplayAcceptance', [$this, 'displayAcceptance'], 10, 1);
     }
 
-    public function displayAcceptance($srcURL): bool
+    public function displayAcceptance($targetURL): bool
     {
         $whiteList = $this->acfService->getField(self::ACF_OPTION_BYPASS_ACCEPTANCE, 'option', false);
         if (is_array($whiteList)) {
-            $srcHost = parse_url($srcURL, PHP_URL_HOST);
+            $targetHost = parse_url($targetURL, PHP_URL_HOST);
             foreach ($whiteList as $row) {
-                if ($srcHost === $row[self::ACF_BYPASS_KEY]) {
+                if ($targetHost === $row[self::ACF_BYPASS_KEY]) {
                     return false;
                 }
             }
