@@ -42,6 +42,10 @@ class RateLimit
      */
     public function init(int $maxRequests, int $timeWindow, string $key): ?WP_Error
     {
+        if ($this->wpService->isUserLoggedIn() && $this->wpService->currentUserCan('edit_posts')) {
+            return null;
+        }
+
         $this->maxRequests = $maxRequests;
         $this->timeWindow  = $timeWindow;
         $this->key         = $key;
