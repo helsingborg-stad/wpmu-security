@@ -41,6 +41,8 @@ class RateLimitTest extends TestCase
             '__' => fn($text, $domain) => $text,
             'doAction' => fn($hook, $args = []) => null,
             'sanitizeTextField' => fn($text) => $text,
+            'isUserLoggedIn' => false,
+            'currentUserCan' => false,
         ]);
 
         $this->config     = new Config('WPSecurity/', $this->wpService);
@@ -75,6 +77,50 @@ class RateLimitTest extends TestCase
 
         $this->assertNotNull($error, 'Should block request over limit');
         $this->assertInstanceOf(\WP_Error::class, $error, 'Should return WP_Error on block');
+    }
+
+    /**
+     * @testdox init() bypasses rate limiting for trusted authenticated users
+     */
+    public function testBypassesRateLimitForTrustedAuthenticatedUsers(): void
+    {
+        $this->wpService = new FakeWpService([
+            'isUserLoggedIn' => true,
+            'currentUserCan' => true,
+        ]);
+        $this->rateLimit = new RateLimit($this->wpService, $this->config);
+
+        for ($request = 0; $request < 4; $request++) {
+            $this->assertNull($this->rateLimit->init(3, 60, 'trusted_action'));
+        }
+    }
+
+    /**
+     * @testdox init() rate limits authenticated subscribers
+     */
+    public function testRateLimitsAuthenticatedSubscribers(): void
+    {
+        $cache = [];
+        $this->wpService = new FakeWpService([
+            'isUserLoggedIn' => true,
+            'currentUserCan' => false,
+            'wpCacheGet' => function ($key, $group) use (&$cache) {
+                return $cache[$group][$key]['data'] ?? false;
+            },
+            'wpCacheSet' => function ($key, $data, $group, $expire) use (&$cache) {
+                $cache[$group][$key] = ['data' => $data];
+                return true;
+            },
+            'doAction' => fn($hook, $args = []) => null,
+            '__' => fn($text, $domain) => $text,
+            'sanitizeTextField' => fn($text) => $text,
+        ]);
+        $this->rateLimit = new RateLimit($this->wpService, $this->config);
+
+        $this->rateLimit->init(1, 60, 'subscriber_action');
+        $error = $this->rateLimit->init(1, 60, 'subscriber_action');
+
+        $this->assertInstanceOf(\WP_Error::class, $error);
     }
 
     /**
