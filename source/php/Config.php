@@ -23,6 +23,21 @@ class Config
   }
 
   /**
+   * Get the salt used to obfuscate the WordPress asset version.
+   *
+   * @return string
+   */
+  public function getAssetVersionObfuscationSalt(): string
+  {
+    $defaultSalt = defined('AUTH_SALT') ? constant('AUTH_SALT') : '';
+
+    return (string) $this->wpService->applyFilters(
+      $this->createFilterKey(__FUNCTION__),
+      $defaultSalt
+    );
+  }
+
+  /**
    * Get the filter prefix.
    * 
    * @return string
