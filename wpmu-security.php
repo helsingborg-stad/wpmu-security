@@ -42,6 +42,8 @@ class WPMUSecurity
         $this->setupHsts($wpService, $config);
         $this->setupCors($wpService, $config);
         $this->setupSubResourceIntegrity($wpService, $config);
+        $this->setupAssetVersionObfuscation($wpService, $config);
+        $this->setupGeneratorRemoval($wpService);
         $this->setupXmlRpc($wpService);
         $this->setupCommentSanitization($wpService);
         $this->setupContentSecurityPolicy($wpService, $config);
@@ -132,6 +134,32 @@ class WPMUSecurity
     {
         $sri = new \WPMUSecurity\Enqueue\SubResourceIntegrity($wpService, $config);
         $sri->addHooks();
+    }
+
+    /**
+     * Feature: Asset Version Obfuscation
+     *
+     * Replaces WordPress core version query values in enqueued asset URLs with a salted hash.
+     *
+     * @return void
+     */
+    public function setupAssetVersionObfuscation($wpService, $config)
+    {
+        $version = new \WPMUSecurity\Enqueue\Version($wpService, $config);
+        $version->addHooks();
+    }
+
+    /**
+     * Feature: Generator Removal
+     *
+     * Removes generator metadata from WordPress-generated output.
+     *
+     * @return void
+     */
+    public function setupGeneratorRemoval($wpService)
+    {
+        $generatorRemoval = new \WPMUSecurity\GeneratorRemoval($wpService);
+        $generatorRemoval->addHooks();
     }
 
     /**
