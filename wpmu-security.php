@@ -43,6 +43,7 @@ class WPMUSecurity
         $this->setupCors($wpService, $config);
         $this->setupSubResourceIntegrity($wpService, $config);
         $this->setupAssetVersionObfuscation($wpService, $config);
+        $this->setupGeneratorRemoval($wpService);
         $this->setupXmlRpc($wpService);
         $this->setupCommentSanitization($wpService);
         $this->setupContentSecurityPolicy($wpService, $config);
@@ -146,6 +147,19 @@ class WPMUSecurity
     {
         $version = new \WPMUSecurity\Enqueue\Version($wpService, $config);
         $version->addHooks();
+    }
+
+    /**
+     * Feature: Generator Removal
+     *
+     * Removes generator metadata from WordPress-generated output.
+     *
+     * @return void
+     */
+    public function setupGeneratorRemoval($wpService)
+    {
+        $generatorRemoval = new \WPMUSecurity\GeneratorRemoval($wpService);
+        $generatorRemoval->addHooks();
     }
 
     /**
