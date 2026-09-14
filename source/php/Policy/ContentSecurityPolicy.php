@@ -43,14 +43,17 @@ class ContentSecurityPolicy
      *
      * @param string $markup The HTML markup to process.
      */
-    public function read($markup): void
+    public function read($markup): string
     {
         if (empty($markup)) {
-            return;
+            return "";
         }
+
         $cspPolicies    = $this->getCategorizedDomainsFromMarkup($markup);
         $cspHeader      = $this->createCategorizedCspHeader($cspPolicies);
         $this->sendCspHeaders($cspHeader);
+
+        return $markup;
     }
 
     /**
