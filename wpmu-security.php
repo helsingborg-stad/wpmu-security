@@ -48,6 +48,7 @@ class WPMUSecurity
         $this->setupCommentSanitization($wpService);
         $this->setupContentSecurityPolicy($wpService, $config);
         $this->setupPermissionsPolicy($wpService);
+        $this->setupResponseSecurityHeaders($wpService);
         $this->setUpAdminOptionsPage($wpService, $acfService);
         $this->setupRateLimiting($wpService, $config);
         $this->setupFrameAcceptance($wpService, $acfService);
@@ -225,6 +226,14 @@ class WPMUSecurity
     {
         $permissions = new \WPMUSecurity\Headers\Permissions($wpService);
         $permissions->addHooks();
+    }
+
+    /**
+     * Add safe browser defaults when the site has not set its own values.
+     */
+    private function setupResponseSecurityHeaders($wpService): void
+    {
+        (new \WPMUSecurity\Headers\ResponseSecurityHeaders($wpService))->addHooks();
     }
 
     /**
