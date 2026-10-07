@@ -100,6 +100,42 @@ class ContentSecurityPolicyPortTest extends TestCase
     }
 
     /**
+     * @testdox getCategorizedDomainsFromMarkup() allows same-origin Dashicons fonts
+     */
+    public function testGetCategorizedDomainsFromMarkupAllowsDashiconsFonts(): void
+    {
+        $html = '
+            <html>
+                <head>
+                    <link rel="stylesheet" href="/wp-includes/css/dashicons.min.css?ver=6.8">
+                </head>
+            </html>
+        ';
+
+        $result = $this->csp->getCategorizedDomainsFromMarkup($html);
+
+        $this->assertContains("'self'", $result['font-src']);
+    }
+
+    /**
+     * @testdox getCategorizedDomainsFromMarkup() does not allow same-origin fonts without a Dashicons reference
+     */
+    public function testGetCategorizedDomainsFromMarkupDoesNotAllowSelfForOtherStylesheets(): void
+    {
+        $html = '
+            <html>
+                <head>
+                    <link rel="stylesheet" href="/wp-includes/css/editor.min.css?ver=6.8">
+                </head>
+            </html>
+        ';
+
+        $result = $this->csp->getCategorizedDomainsFromMarkup($html);
+
+        $this->assertNotContains("'self'", $result['font-src']);
+    }
+
+    /**
      * @testdox createCategorizedCspHeader() includes ports in CSP header
      */
     public function testCreateCategorizedCspHeaderIncludesPortsInCspHeader(): void
