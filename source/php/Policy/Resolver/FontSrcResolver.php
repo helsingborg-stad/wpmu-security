@@ -13,6 +13,9 @@ class FontSrcResolver implements DomainResolverInterface {
     public function resolve(DomWrapperInterface $dom): array {
         $domains = [];
         foreach ($dom->getInlineCss() as $css) {
+            if (stripos($css, 'dashicons') !== false) {
+                $domains[] = "'self'";
+            }
             preg_match_all('/url\((["\']?)(.*?)\1\)\s*format\((["\']?)(.*?)\3\)/i', $css, $matches, PREG_SET_ORDER);
             foreach ($matches as $match) {
                 if (preg_match('/\.(woff2?|ttf|otf|eot|svg)(\?.*)?$/i', $match[2])) {
@@ -21,6 +24,12 @@ class FontSrcResolver implements DomainResolverInterface {
                         $domains[] = $host;
                     }
                 }
+            }
+        }
+        foreach ($dom->query('//link[@href]') as $link) {
+            if ($link instanceof \DOMElement && stripos($link->getAttribute('href'), 'dashicons') !== false) {
+                $domains[] = "'self'";
+                break;
             }
         }
         $domains[] = "data:";
