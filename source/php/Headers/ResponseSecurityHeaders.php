@@ -25,7 +25,7 @@ class ResponseSecurityHeaders
         );
 
         $defaults = [
-            'Referrer-Policy' => 'same-origin',
+            'Referrer-Policy' => 'origin',
             'X-Content-Type-Options' => 'nosniff',
         ];
 
